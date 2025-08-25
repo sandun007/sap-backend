@@ -49,6 +49,26 @@
             background-color: #0070f3;
             color: #fff;
         }
+        /* Submenu positioning */
+        .dropdown-submenu {
+            position: relative;
+        }
+
+        .dropdown-submenu > .dropdown-menu {
+            top: 0;
+            right: 100%;   /* popup LEFT of parent */
+            left: auto;    /* disable default right-side */
+            margin-top: -1px;
+            display: none;
+            position: absolute;
+        }
+
+        /* Show submenu on hover */
+        .dropdown-submenu:hover > .dropdown-menu {
+            display: block;
+        }
+
+
 
     </style>
 

@@ -69,11 +69,31 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Administration</a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#">Users</a></li>
+
+                        <!-- Users submenu -->
+                        <li class="dropdown-submenu">
+                            <a class="dropdown-item" href="#">Users</a>
+                            <ul class="dropdown-menu dropdown-menu-start">
+                                <li><a class="dropdown-item" href="#">Add User</a></li>
+                                <li><a class="dropdown-item" href="#">Manage Users</a></li>
+                            </ul>
+                        </li>
+
+                        <!-- Roles -->
                         <li><a class="dropdown-item" href="#">Roles</a></li>
-                        <li><a class="dropdown-item" href="#">Settings</a></li>
+
+                        <!-- Settings submenu -->
+                        <li class="dropdown-submenu">
+                            <a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a>
+                            <ul class="dropdown-menu dropdown-menu-start">
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-sliders me-2"></i>General</a></li>
+                                <li><a class="dropdown-item" href="#"><i class="bi bi-shield-check me-2"></i>Security</a></li>
+                            </ul>
+                        </li>
                     </ul>
                 </li>
+
+
 
                 <!-- Logout -->
                 <li class="nav-item">
