@@ -67,7 +67,21 @@
         .dropdown-submenu:hover > .dropdown-menu {
             display: block;
         }
+        .nav-item.dropdown:hover > .dropdown-menu {
+            display: block;
+            margin-top: 0; /* Fix jump effect */
+        }
 
+        /* Submenu position */
+        .dropdown-submenu {
+            position: relative;
+        }
+
+        /*.dropdown-submenu > .dropdown-menu {*/
+        /*    top: 0;*/
+        /*    left: 100%;*/
+        /*    margin-top: -1px;*/
+        /*}*/
 
 
     </style>

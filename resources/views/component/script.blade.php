@@ -2,6 +2,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hotkeys-js@3.8.7/dist/hotkeys.min.js"></script>
+<script src="{{asset('assets/shortcut.js')}}"></script>
 <script>
     // Sales Chart
     const ctx1 = document.getElementById('salesChart');
@@ -43,4 +45,6 @@
     });
 
 </script>
+
+@include('settings.shortcut')
 @stack('script')

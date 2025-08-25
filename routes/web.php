@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,4 +16,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/',[AdminController::class,'login'])->name('login');
+
+Route::prefix('admin')->group(function(){
 Route::get('/dashboard',[AdminController::class,'dashboard'])->name('dashboard');
+
+Route::prefix('setting')->group(function(){
+    Route::get('/general-setting',[SettingController::class,'general_setting'])->name('setting.general');
+});
+
+});

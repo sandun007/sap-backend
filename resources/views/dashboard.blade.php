@@ -1,5 +1,7 @@
 @extends('app')
-
+@push('title')
+    Dashboard
+@endpush
 @section('content')
     <div class="row g-4">
         <!-- KPI Cards -->
@@ -156,7 +158,14 @@
                         <i class="bi bi-shop text-primary" style="font-size: 2rem;"></i>
                         <p class="mt-2">Stores</p>
                     </div>
-
+                    <div class="col-4 col-sm-3 col-md-1 text-center">
+                        <i class="bi bi-gear text-warning" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Setting</p>
+                    </div>
+                    <div class="col-4 col-sm-3 col-md-1 text-center">
+                        <i class="bi bi-lightning-charge-fill text-warning" style="font-size: 2rem;"></i>
+                        <p class="mt-2">Shortcut</p>
+                    </div>
 
                 </div>
             </div>
