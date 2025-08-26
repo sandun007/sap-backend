@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('phone_no_01');
             $table->string('phone_no_02')->nullable();
+            $table->string('website')->nullable();
             $table->string('logo')->nullable();
             $table->integer('product_code')->default(1);
             $table->integer('brand_code')->default(1);

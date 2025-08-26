@@ -16,6 +16,7 @@ class InvPara extends Model
         'email',
         'phone_no_01',
         'phone_no_02',
+        'website',
         'logo',
         'product_code',
         'brand_code',

@@ -76,74 +76,7 @@
 @endpush
 
 @section('content')
-    <div class="container-fluid py-4">
-
-        <div class="sap-card shadow-sm">
-
-            <form>
-                <div class="row g-4">
-                    <!-- Company Info -->
-                    <div class="col-md-4">
-                        <label class="form-label">Company Name</label>
-                        <input type="text" class="form-control" placeholder="Enter company name" value="{{$inv_data->company_name}}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Company Flag</label>
-                        <input type="text" class="form-control" placeholder="Enter company flag" value="{{$inv_data->company_flag}}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Company Email</label>
-                        <input type="email" class="form-control" placeholder="Enter email address" value="{{$inv_data->email}}">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Phone Number 01</label>
-                        <input type="text" class="form-control" placeholder="Enter phone number" value="{{$inv_data->phone_no_01}}">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">Phone Number 02</label>
-                        <input type="text" class="form-control" placeholder="Enter phone number" value="{{$inv_data->phone_no_02}}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Website</label>
-                        <input type="text" class="form-control" placeholder="Enter website URL">
-                    </div>
-
-                    <!-- Address -->
-                    <div class="col-md-8">
-                        <label class="form-label">Address</label>
-                        <textarea class="form-control" rows="2" placeholder="Enter company address">{{$inv_data->company_address}}</textarea>
-                    </div>
-
-                    <!-- Logo Upload (SAP Tile Style) -->
-                    <div class="col-md-4">
-                        <label class="form-label">Company Logo</label>
-                        <div class="upload-tile text-center" onclick="document.getElementById('companyLogo').click()">
-                            <img id="logoPreview"
-                                 src="{{asset('assets/img/no-image-available-picture-coming-600nw-2057829641.webp')}}"
-                                 alt="Company Logo"
-                                 class="img-fluid mb-2">
-                            <p class="text-muted small m-0">
-                                <i class="bi bi-upload me-1"></i> Click to upload
-                            </p>
-                            <input type="file" class="d-none" id="companyLogo" accept="image/*">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="d-flex justify-content-end mt-4">
-                    <button type="reset" class="btn btn-light border me-2">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
-                    </button>
-                    <button type="submit" class="btn btn-sap">
-                        <i class="bi bi-save2 me-1"></i> Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
+    @livewire('general-setting')
 @endsection
 
 @push('script')

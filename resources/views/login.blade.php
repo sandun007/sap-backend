@@ -6,7 +6,7 @@
           content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="{{asset('assets/bootstrap/css/bootstrap.min.css')}}">
-    <title>SAP Style Login</title>
+    <title>{{$inv_data->company_name}} - Login</title>
     <style>
         body {
             background: linear-gradient(to right, #004e92, #000428);
