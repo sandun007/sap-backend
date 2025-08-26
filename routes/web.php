@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
@@ -35,5 +36,12 @@ Route::prefix('admin')->group(function () {
 
     Route::prefix('category')->group(function () {
         Route::get('/create', [ProductController::class, 'category_create'])->name('category.create');
+    });
+
+    Route::prefix('company')->group(function () {
+        Route::prefix('branch')->group(function () {
+            Route::get('/create', [CompanyController::class, 'create_branch'])->name('branch.create');
+        });
+
     });
 });

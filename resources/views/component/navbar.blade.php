@@ -78,7 +78,7 @@
                                 <i class="bi bi-building me-2"></i> Branch
                             </a>
                             <ul class="dropdown-menu dropdown-menu-start">
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-plus-circle me-2"></i> New Branch</a></li>
+                                <li><a class="dropdown-item" href="{{route('branch.create')}}"><i class="bi bi-plus-circle me-2"></i> New Branch</a></li>
                                 <li><a class="dropdown-item" href="#"><i class="bi bi-list-ul me-2"></i> Branch List</a></li>
                             </ul>
                         </li>
