@@ -56,7 +56,7 @@
                                 <i class="bi bi-tags me-2"></i> Category
                             </a>
                             <ul class="dropdown-menu dropdown-menu-start">
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-plus-circle me-2"></i> New Category</a></li>
+                                <li><a class="dropdown-item" href="{{route('category.create')}}"><i class="bi bi-plus-circle me-2"></i> New Category</a></li>
                                 <li><a class="dropdown-item" href="#"><i class="bi bi-list-ul me-2"></i> Category List</a></li>
                             </ul>
                         </li>

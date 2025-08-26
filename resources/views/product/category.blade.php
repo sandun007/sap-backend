@@ -1,9 +1,9 @@
 @extends('app')
 @push('title')
-    Brand
+    Category
 @endpush
 @push('path')
-    Brand Details
+    Category Details
 @endpush
 @push('css')
     <style>
@@ -107,5 +107,5 @@
 @endpush
 
 @section('content')
-    @livewire('brand-create')
+    @livewire('category-create')
 @endsection

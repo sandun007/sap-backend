@@ -29,6 +29,10 @@
             e.preventDefault();
             window.location.href = "{{ route('brand.create') }}";
         }
+        if(keysPressed['alt'] && keysPressed['c'] && keysPressed['t']){
+            e.preventDefault();
+            window.location.href = "{{ route('category.create') }}";
+        }
     });
 
     document.addEventListener("keyup", function(e) {
