@@ -2,6 +2,35 @@
 @push('title')
     Dashboard
 @endpush
+@push('css')
+    <style>
+        .quick-access-item {
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .quick-access-item:hover {
+            background-color: rgba(10, 61, 98, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #0a3d62;
+        }
+
+        .quick-access-item i {
+            transition: transform 0.2s ease;
+        }
+
+        .quick-access-item:hover i {
+            transform: scale(1.2);
+        }
+
+        .quick-access-item p {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+    </style>
+@endpush
 @section('content')
     <div class="row g-4">
         <!-- KPI Cards -->
@@ -46,127 +75,172 @@
                     </div>
 
                     <!-- Sales Invoice -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-receipt text-primary" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Sales Invoice</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-receipt text-primary" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Sales Invoice</p>
+                        </a>
                     </div>
 
                     <!-- Purchases -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-cart-check text-success" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Purchases</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-cart-check text-success" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Purchases</p>
+                        </a>
                     </div>
 
                     <!-- Live Stock -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-box-seam text-warning" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Live Stock</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-box-seam text-warning" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Live Stock</p>
+                        </a>
                     </div>
 
                     <!-- Sales Report -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-graph-up text-info" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Sales Report</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-graph-up text-info" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Sales Report</p>
+                        </a>
                     </div>
 
                     <!-- Stock Report -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-clipboard-data text-secondary" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Stock Report</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-clipboard-data text-secondary" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Stock Report</p>
+                        </a>
                     </div>
 
                     <!-- Profit Report -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-cash-coin text-success" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Profit Report</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-cash-coin text-success" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Profit Report</p>
+                        </a>
                     </div>
 
                     <!-- Return -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-arrow-counterclockwise text-danger" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Return</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-arrow-counterclockwise text-danger" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Return</p>
+                        </a>
                     </div>
 
                     <!-- Product -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-tags text-dark" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Product</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-tags text-dark" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Product</p>
+                        </a>
                     </div>
 
                     <!-- Category -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-grid text-primary" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Category</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-grid text-primary" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Category</p>
+                        </a>
                     </div>
 
                     <!-- Brand -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-award text-success" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Brand</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-award text-success" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Brand</p>
+                        </a>
                     </div>
 
-
                     <!-- Customer -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Customer</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Customer</p>
+                        </a>
                     </div>
 
                     <!-- Supplier -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-truck text-warning" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Supplier</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-truck text-warning" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Supplier</p>
+                        </a>
                     </div>
 
                     <!-- Employee -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-person-badge text-success" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Employee</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-person-badge text-success" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Employee</p>
+                        </a>
                     </div>
 
                     <!-- Expenses -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-wallet2 text-danger" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Expenses</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-wallet2 text-danger" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Expenses</p>
+                        </a>
                     </div>
 
                     <!-- Branch -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-building text-primary" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Branch</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-building text-primary" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Branch</p>
+                        </a>
                     </div>
 
                     <!-- Department -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-diagram-3 text-success" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Department</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-diagram-3 text-success" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Department</p>
+                        </a>
                     </div>
 
                     <!-- Bank -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-bank text-warning" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Bank</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-bank text-warning" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Bank</p>
+                        </a>
                     </div>
 
                     <!-- Cheque -->
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-credit-card-2-front text-danger" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Cheque</p>
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-credit-card-2-front text-danger" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Cheque</p>
+                        </a>
                     </div>
 
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-shop text-primary" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Stores</p>
-                    </div>
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-gear text-warning" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Setting</p>
-                    </div>
-                    <div class="col-4 col-sm-3 col-md-1 text-center">
-                        <i class="bi bi-lightning-charge-fill text-warning" style="font-size: 2rem;"></i>
-                        <p class="mt-2">Shortcut</p>
+                    <!-- Stores -->
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-shop text-primary" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Stores</p>
+                        </a>
                     </div>
 
+                    <!-- Settings -->
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-gear text-warning" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Setting</p>
+                        </a>
+                    </div>
+
+                    <!-- Shortcut -->
+                    <div class="col-4 col-sm-3 col-md-1 text-center mb-3">
+                        <a href="" class="quick-access-item d-block p-2 rounded">
+                            <i class="bi bi-lightning-charge-fill text-warning" style="font-size: 2rem;"></i>
+                            <p class="mt-2 m-0">Shortcut</p>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

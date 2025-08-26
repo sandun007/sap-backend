@@ -22,7 +22,7 @@
         .form-control,
         .form-select,
         textarea {
-            border: 1px solid #cfd8dc;
+            border: 1px solid #0a3d62;
             border-radius: 6px;
             transition: border-color 0.2s, box-shadow 0.2s;
         }

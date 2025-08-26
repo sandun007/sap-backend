@@ -12,9 +12,23 @@
         e.preventDefault();
         window.location.href = "{{ route('dashboard') }}";
     });
-    {{--hotkeys('ctrl+n, p', function(e) {--}}
-    {{--    e.preventDefault();--}}
-    {{--    window.location.href = "{{ route('create.product') }}";--}}
-    {{--});--}}
 
 </script>
+<script>
+    let keysPressed = {};
+
+    document.addEventListener("keydown", function(e) {
+        keysPressed[e.key.toLowerCase()] = true;
+
+        // Alt + N + P
+        if(keysPressed['alt'] && keysPressed['n'] && keysPressed['i']){
+            e.preventDefault();
+            window.location.href = "{{ route('product.create') }}";
+        }
+    });
+
+    document.addEventListener("keyup", function(e) {
+        keysPressed[e.key.toLowerCase()] = false;
+    });
+</script>
+

@@ -76,6 +76,9 @@
         .dropdown-submenu {
             position: relative;
         }
+        .navbar .dropdown-toggle::after {
+            display: none;
+        }
 
         /*.dropdown-submenu > .dropdown-menu {*/
         /*    top: 0;*/
