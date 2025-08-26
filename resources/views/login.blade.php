@@ -49,7 +49,7 @@
     <div class="card login-card p-4">
         <div class="text-center">
             <!-- Company Logo -->
-            <img src="{{asset('assets/img/logo.png')}}" alt="Company Logo" class="company-logo">
+            <img src="{{ asset('storage/'.$inv_data->logo) }}" alt="Company Logo" class="company-logo">
 
             <!-- Company Name -->
             <h4 class="sap-title">{{$inv_data->company_name}} - Login</h4>

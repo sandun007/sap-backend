@@ -10,4 +10,19 @@ class ProductController extends Controller
     {
         return view('product.product_create');
     }
+
+    //    =============================== Brand ===========================================
+
+    public function brand_create()
+    {
+        return view('product.brand');
+    }
+
+
+//    =================================== Category ================================================
+
+    public function category_create()
+    {
+        return view('product.category');
+    }
 }

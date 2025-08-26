@@ -45,7 +45,7 @@
                                 <i class="bi bi-box-seam me-2"></i> Products
                             </a>
                             <ul class="dropdown-menu dropdown-menu-start">
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-plus-circle me-2"></i> New Product</a></li>
+                                <li><a class="dropdown-item" href="{{route('product.create')}}"><i class="bi bi-plus-circle me-2"></i> New Product</a></li>
                                 <li><a class="dropdown-item" href="#"><i class="bi bi-list-ul me-2"></i> Product List</a></li>
                             </ul>
                         </li>
@@ -67,7 +67,7 @@
                                 <i class="bi bi-award me-2"></i> Brand
                             </a>
                             <ul class="dropdown-menu dropdown-menu-start">
-                                <li><a class="dropdown-item" href="#"><i class="bi bi-plus-circle me-2"></i> New Brand</a></li>
+                                <li><a class="dropdown-item" href="{{route('brand.create')}}"><i class="bi bi-plus-circle me-2"></i> New Brand</a></li>
                                 <li><a class="dropdown-item" href="#"><i class="bi bi-list-ul me-2"></i> Brand List</a></li>
                             </ul>
                         </li>

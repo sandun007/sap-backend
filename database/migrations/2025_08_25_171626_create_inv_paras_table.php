@@ -34,6 +34,8 @@ return new class extends Migration
             $table->integer('department_code')->default(1);
             $table->integer('expenses_code')->default(1);
             $table->integer('store_code')->default(1);
+            $table->string('status')->default('active');
+            $table->string('package')->default('basic');
             $table->timestamps();
         });
     }

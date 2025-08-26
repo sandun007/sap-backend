@@ -4,6 +4,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/hotkeys-js@3.8.7/dist/hotkeys.min.js"></script>
 <script src="{{asset('assets/shortcut.js')}}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script>
     // Sales Chart
     const ctx1 = document.getElementById('salesChart');
@@ -45,6 +48,15 @@
     });
 
 </script>
-
+<script>
+    $(document).ready(function () {
+        $('#brandTable').DataTable({
+            "pageLength": 5,   // show 5 rows per page
+            "lengthMenu": [5, 10, 25, 50],
+            "ordering": true,  // enable sorting
+            "searching": true, // enable search box
+        });
+    });
+</script>
 @include('settings.shortcut')
 @stack('script')

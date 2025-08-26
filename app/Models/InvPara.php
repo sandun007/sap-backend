@@ -30,6 +30,8 @@ class InvPara extends Model
         'supplier_code',
         'department_code',
         'expenses_code',
-        'store_code'
+        'store_code',
+        'status',
+        'package'
     ];
 }

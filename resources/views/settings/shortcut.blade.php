@@ -21,9 +21,13 @@
         keysPressed[e.key.toLowerCase()] = true;
 
         // Alt + N + P
-        if(keysPressed['alt'] && keysPressed['n'] && keysPressed['i']){
+        if(keysPressed['alt'] && keysPressed['p']){
             e.preventDefault();
             window.location.href = "{{ route('product.create') }}";
+        }
+        if(keysPressed['alt'] && keysPressed['b']){
+            e.preventDefault();
+            window.location.href = "{{ route('brand.create') }}";
         }
     });
 

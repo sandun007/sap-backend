@@ -16,17 +16,24 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/',[AdminController::class,'login'])->name('login');
+Route::get('/', [AdminController::class, 'login'])->name('login');
 
-Route::prefix('admin')->group(function(){
-Route::get('/dashboard',[AdminController::class,'dashboard'])->name('dashboard');
+Route::prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-Route::prefix('setting')->group(function(){
-    Route::get('/general-setting',[SettingController::class,'general_setting'])->name('setting.general');
-});
+    Route::prefix('setting')->group(function () {
+        Route::get('/general-setting', [SettingController::class, 'general_setting'])->name('setting.general');
+    });
 
-Route::prefix('product')->group(function(){
-    Route::get('/create',[ProductController::class,'create'])->name('product.create');
-});
+    Route::prefix('product')->group(function () {
+        Route::get('/create', [ProductController::class, 'create'])->name('product.create');
+    });
 
+    Route::prefix('brand')->group(function () {
+        Route::get('/create', [ProductController::class, 'brand_create'])->name('brand.create');
+    });
+
+    Route::prefix('category')->group(function () {
+        Route::get('/create', [ProductController::class, 'category_create'])->name('category.create');
+    });
 });
