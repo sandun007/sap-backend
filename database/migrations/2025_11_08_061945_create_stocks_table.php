@@ -11,18 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stocks', function (Blueprint $table) {
+        Schema::create('stock', function (Blueprint $table) {
             $table->id('stock_id');
             $table->unsignedBigInteger('product_id');
-            $table->unsignedBigInteger('brand_id');
-            $table->integer('quantity');
-            $table->decimal('reorder_level', 10, 2)->nullable();
-            $table->date('last_updated')->nullable();
-            $table->text('address')->nullable();
+            $table->unsignedBigInteger('branch_id');
+            $table->integer('quantity')->default(0);
+            $table->integer('minimum_stock_level')->default(0);
+            $table->integer('maximum_stock_level')->default(0);
+            $table->date('last_restocked_date')->nullable();
+            $table->string('location_in_warehouse')->nullable();
+            $table->timestamps();
 
             $table->foreign('product_id')->references('product_id')->on('products')->onDelete('cascade');
-            $table->foreign('brand_id')->references('brand_id')->on('brands')->onDelete('cascade');
-            $table->timestamps();
+            $table->foreign('branch_id')->references('branch_id')->on('branches')->onDelete('cascade');
         });
     }
 

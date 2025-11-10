@@ -15,17 +15,20 @@ return new class extends Migration
             $table->id('employee_id');
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('position')->nullable();
-            $table->unsignedBigInteger('department_id');
-            $table->unsignedBigInteger('branch_id');
-            $table->string('email')->nullable();
+            $table->string('email')->nullable()->unique();
             $table->string('phone')->nullable();
             $table->date('hire_date')->nullable();
+            $table->string('position')->nullable();
             $table->decimal('salary', 10, 2)->nullable();
+            $table->string('address')->nullable();
+            $table->date('date_of_birth')->nullable();
+            $table->unsignedBigInteger('department_id');
+            $table->unsignedBigInteger('manager_id')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
 
             $table->foreign('department_id')->references('department_id')->on('departments')->onDelete('cascade');
-            $table->foreign('branch_id')->references('branch_id')->on('branches')->onDelete('cascade');
-            $table->timestamps();
+            $table->foreign('manager_id')->references('employee_id')->on('employees')->onDelete('set null');
         });
     }
 

@@ -14,17 +14,16 @@ return new class extends Migration
         Schema::create('suppliers', function (Blueprint $table) {
             $table->id('supplier_id');
             $table->string('supplier_name');
-            $table->unsignedBigInteger('brand_id')->nullable();
             $table->string('contact_person')->nullable();
             $table->string('phone')->nullable();
-            $table->string('email')->nullable();
+            $table->string('email')->nullable()->unique();
             $table->text('address')->nullable();
-
-            $table->foreign('brand_id')->references('brand_id')->on('brands')->onDelete('set null');
+            $table->string('tax_id')->nullable();
+            $table->string('payment_terms')->nullable();
+            $table->date('created_date')->nullable();
             $table->timestamps();
         });
     }
-
     /**
      * Reverse the migrations.
      */

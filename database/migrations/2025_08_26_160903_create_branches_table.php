@@ -12,21 +12,20 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('branches', function (Blueprint $table) {
-            $table->id();
-            $table->string('code');
-            $table->string('name');
-            $table->string('flag');
-            $table->string('address');
-            $table->string('location');
-            $table->string('email')->nullable();
-            $table->string('phone_no_01');
-            $table->string('phone_no_02')->nullable();
-            $table->string('website')->nullable();
-            $table->string('company_id');
-            $table->string('status');
+            $table->id('branch_id');
+            $table->string('branch_name');
+            $table->text('address')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable()->unique();
+            $table->unsignedBigInteger('manager_id')->nullable();
+            $table->date('opening_date')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            $table->foreign('manager_id')->references('employee_id')->on('employees')->onDelete('set null');
         });
     }
+
 
     /**
      * Reverse the migrations.

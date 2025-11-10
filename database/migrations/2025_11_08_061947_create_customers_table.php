@@ -13,11 +13,15 @@ return new class extends Migration
     {
         Schema::create('customers', function (Blueprint $table) {
             $table->id('customer_id');
-            $table->string('customer_name');
+            $table->string('first_name');
+            $table->string('last_name');
+            $table->string('company_name')->nullable();
+            $table->string('email')->nullable()->unique();
             $table->string('phone')->nullable();
-            $table->string('email')->nullable();
             $table->text('address')->nullable();
-            $table->string('city')->nullable();
+            $table->string('customer_type')->nullable();
+            $table->date('registration_date')->nullable();
+            $table->decimal('credit_limit', 15, 2)->default(0);
             $table->timestamps();
         });
     }

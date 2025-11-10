@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('departments', function (Blueprint $table) {
             $table->id('department_id');
             $table->string('department_name');
+            $table->text('description')->nullable();
+            $table->unsignedBigInteger('manager_id')->nullable();
             $table->unsignedBigInteger('branch_id');
-            $table->string('description')->nullable();
-
-            $table->foreign('branch_id')->references('branch_id')->on('branches')->onDelete('cascade');
+            $table->date('created_date')->nullable();
             $table->timestamps();
+
+            $table->foreign('manager_id')->references('employee_id')->on('employees')->onDelete('set null');
+            $table->foreign('branch_id')->references('branch_id')->on('branches')->onDelete('cascade');
         });
     }
-
     /**
      * Reverse the migrations.
      */

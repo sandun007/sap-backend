@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Product extends Model
+{
+    use HasFactory;
+
+    protected $primaryKey = 'product_id';
+
+    protected $fillable = [
+        'product_name',
+        'brand_id',
+        'subcategory_id',
+        'price',
+        'unit',
+        'status',
+        'description',
+    ];
+
+    // Relations
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id', 'brand_id');
+    }
+
+    public function subcategory()
+    {
+        return $this->belongsTo(SubCategory::class, 'subcategory_id', 'subcategory_id');
+    }
+}

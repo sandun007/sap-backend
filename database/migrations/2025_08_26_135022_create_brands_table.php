@@ -12,10 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('brands', function (Blueprint $table) {
-            $table->id();
-            $table->string('brand_code')->unique();
+            $table->id('brand_id');
             $table->string('brand_name');
-            $table->string('company_id');
+            $table->string('contact_person')->nullable();
+            $table->string('phone')->nullable();
+            $table->string('email')->nullable()->unique();
+            $table->string('website')->nullable();
+            $table->date('created_date')->nullable();
             $table->timestamps();
         });
     }
