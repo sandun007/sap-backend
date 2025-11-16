@@ -3,26 +3,75 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Product;
 
 class ProductController extends Controller
 {
-    public function create()
+    // List all products
+    public function index()
     {
-        return view('product.product_create');
+        $products = Product::with(['brand', 'subcategory'])->get();
+        return response()->json($products);
     }
 
-    //    =============================== Brand ===========================================
-
-    public function brand_create()
+    // Add new product
+    public function store(Request $request)
     {
-        return view('product.brand');
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'brand_id' => 'required|exists:brands,brand_id',
+            'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
+            'price' => 'required|numeric',
+            'unit' => 'required|string|max:50',
+            'status' => 'nullable|string',
+            'description' => 'nullable|string',
+        ]);
+
+        $product = Product::create($request->all());
+        return response()->json($product, 201);
     }
 
-
-//    =================================== Category ================================================
-
-    public function category_create()
+    // Show single product
+    public function show($id)
     {
-        return view('product.category');
+        $product = Product::with(['brand', 'subcategory'])->find($id);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+        return response()->json($product);
+    }
+
+    // Update product
+    public function update(Request $request, $id)
+    {
+        $product = Product::find($id);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $request->validate([
+            'product_name' => 'required|string|max:255',
+            'brand_id' => 'required|exists:brands,brand_id',
+            'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
+            'price' => 'required|numeric',
+            'unit' => 'required|string|max:50',
+            'status' => 'nullable|string',
+            'description' => 'nullable|string',
+        ]);
+
+        $product->update($request->all());
+        return response()->json($product);
+    }
+
+    // Delete product
+    public function destroy($id)
+    {
+        $product = Product::find($id);
+        if (!$product) {
+            return response()->json(['message' => 'Product not found'], 404);
+        }
+
+        $product->delete();
+        return response()->json(['message' => 'Product deleted successfully']);
     }
 }
