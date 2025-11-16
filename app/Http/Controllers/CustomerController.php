@@ -79,14 +79,18 @@ public function store(Request $request)
     // Update customer
     public function update(Request $request, $id)
     {
+     
+
+
         $customer = Customer::find($id);
+
+            
         if (!$customer) {
             return response()->json(['message' => 'Customer not found'], 404);
         }
-
         $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'company_name' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:customers,email,' . $id . ',customer_id',
             'phone' => 'nullable|string|max:20',
@@ -95,6 +99,7 @@ public function store(Request $request)
             'registration_date' => 'nullable|date',
             'credit_limit' => 'nullable|numeric',
         ]);
+       
 
         $customer->update($request->all());
         return response()->json($customer);
