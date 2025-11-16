@@ -14,7 +14,7 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AuthController;
-
+use App\Http\Controllers\AdminController;
 
 
 
@@ -38,7 +38,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 
 
 Route::middleware(['auth:sanctum'])->group(function () {
-    
+    Route::apiResource('customers', CustomerController::class);
     Route::apiResource('products', ProductController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('suppliers', SupplierController::class);
@@ -51,5 +51,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('orders', OrderController::class);
 });
 
-Route::apiResource('customers', CustomerController::class);
+Route::post('/customer/create', [CustomerController::class, 'store']);
+Route::post('/employee/create', [EmployeeController::class, 'store']);
+Route::post('/admin/create', [AdminController::class, 'createAdmin']);
+
 
