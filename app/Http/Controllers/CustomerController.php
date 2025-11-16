@@ -12,8 +12,12 @@ class CustomerController extends Controller
     // List all customers
     public function index()
     {
-        $customers = Customer::all();
-        return response()->json($customers);
+        $user = auth()->user();
+        if($user && $user->role === 'customer') {
+            return Customer::all();
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
     }
 
 

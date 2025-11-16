@@ -37,33 +37,18 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
+    Route::apiResource('customers', CustomerController::class);
+    Route::apiResource('products', ProductController::class);
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('suppliers', SupplierController::class);
+    Route::apiResource('departments', DepartmentController::class);
+    Route::apiResource('brands', BrandController::class);
+    Route::apiResource('branches', BranchController::class);
+    Route::apiResource('employees', EmployeeController::class);
+    Route::apiResource('stocks', StockController::class);
+    Route::apiResource('subcategories', SubCategoryController::class);
+    Route::apiResource('orders', OrderController::class);
 });
 
-// Customer CRUD routes
-Route::apiResource('customers', CustomerController::class);
-//product CRUD
-Route::apiResource('products', ProductController::class);
-// Category CRUD
-Route::apiResource('categories', CategoryController::class);
-//Supplier CRUD
-Route::apiResource('suppliers', SupplierController::class);
-// Department CRUD
-Route::apiResource('departments', DepartmentController::class);
-// Brand CRUD
-Route::apiResource('brands', BrandController::class);
-// Branch CRUD
-Route::apiResource('branches', BranchController::class);
 
-//Employee CRUD
-Route::apiResource('employees', EmployeeController::class);
-
-// Stock CRUD
-Route::apiResource('stocks', StockController::class);
-
-// SubCategory CRUD
-Route::apiResource('subcategories', SubCategoryController::class);
-
-//Order CRUD
-Route::apiResource('orders', OrderController::class);
