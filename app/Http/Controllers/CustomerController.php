@@ -24,7 +24,7 @@ class CustomerController extends Controller
 // Create new customer
 public function store(Request $request)
 {
-    
+     
     // Custom check for already-existing email: if the request supplied an email and it exists, return 409
     if ($request->filled('email') && User::where('email', $request->input('email'))->exists()) {
         return response()->json(['message' => 'Email already exists'], 409);
