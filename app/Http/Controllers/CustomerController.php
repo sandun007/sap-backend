@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Customer;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class CustomerController extends Controller
 {
@@ -14,24 +16,59 @@ class CustomerController extends Controller
         return response()->json($customers);
     }
 
-    // Add new customer
-    public function store(Request $request)
-    {
-        $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'company_name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|unique:customers,email',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
-            'customer_type' => 'nullable|string|max:50',
-            'registration_date' => 'nullable|date',
-            'credit_limit' => 'nullable|numeric',
-        ]);
 
-        $customer = Customer::create($request->all());
-        return response()->json($customer, 201);
+// Create new customer
+public function store(Request $request)
+{
+    
+    // Custom check for already-existing email: if the request supplied an email and it exists, return 409
+    if ($request->filled('email') && User::where('email', $request->input('email'))->exists()) {
+        return response()->json(['message' => 'Email already exists'], 409);
     }
+
+    if ($request->filled('email') && Customer::where('email', $request->input('email'))->exists()) {
+        return response()->json(['message' => 'Email already exists'], 409);
+    }
+
+    $messages = [
+        'email.unique' => 'This email is already registered. Please use another email.'
+    ];
+
+    $validated = $request->validate([
+        'first_name' => 'required|string|max:255',
+        'last_name' => 'required|string|max:255',
+        'company_name' => 'nullable|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'phone' => 'nullable|string|max:20',
+        'address' => 'nullable|string',
+        'customer_type' => 'nullable|string|max:50',
+        'registration_date' => 'nullable|date',
+        'credit_limit' => 'nullable|numeric',
+        'password' => 'required|string|min:6', // password required
+    ], $messages);
+
+    // Create USER record
+    $user = User::create([
+        'name'  => $validated['first_name'] . ' ' . $validated['last_name'],
+        'email' => $validated['email'],
+        'password' => Hash::make($validated['password']),
+        'role' => 'customer',
+    ]);
+
+    // Remove password before creating customer record
+    unset($validated['password']);
+
+    // Create CUSTOMER record
+    $customer = Customer::create($validated);
+
+    
+
+    return response()->json([
+        'message' => 'Customer created successfully',
+        'user_id' => $user->id,
+        'data' => $customer
+    ], 201);
+}
 
 
 

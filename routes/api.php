@@ -13,7 +13,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\OrderController;
-
+use App\Http\Controllers\AuthController;
 
 
 
@@ -30,6 +30,12 @@ use App\Http\Controllers\OrderController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
