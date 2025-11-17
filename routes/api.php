@@ -54,6 +54,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('stocks/{id}/add', [StockController::class, 'addStock']); 
     Route::post('stocks/{id}/remove', [StockController::class, 'removeStock']);
     Route::get('stocks/alerts/low-stock', [StockController::class, 'getLowStock']); 
+
+    // Stock Transaction History
+    Route::get('stock-transactions', [StockController::class, 'getTransactionHistory']); // All transactions
+    Route::get('stock-transactions/stock/{stock_id}', [StockController::class, 'getTransactionHistory']); // By stock
+    Route::get('stock-transactions/product/{product_id}', [StockController::class, 'getTransactionsByProduct']); // By product
+    Route::get('stock-transactions/branch/{branch_id}', [StockController::class, 'getTransactionsByBranch']); // By branch
+    Route::post('stock-transactions/date-range', [StockController::class, 'getTransactionsByDateRange']); // By date range
     
     // Optional: Additional stock-related routes
     Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']); 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Stock;
 use App\Models\Product;
+use App\Models\StockTransaction;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -61,9 +62,27 @@ class StockController extends Controller
                     // Auto increment quantity if same item exists
                     DB::beginTransaction();
                     
+                    $quantityBefore = $existingStock->quantity;
                     $existingStock->quantity += $data['quantity'];
                     $existingStock->last_restocked_date = now();
                     $existingStock->save();
+
+                    // Record transaction
+                    StockTransaction::create([
+                        'stock_id' => $existingStock->stock_id,
+                        'product_id' => $existingStock->product_id,
+                        'branch_id' => $existingStock->branch_id,
+                        'brand_id' => $existingStock->brand_id,
+                        'category_id' => $existingStock->category_id,
+                        'subcategory_id' => $existingStock->subcategory_id,
+                        'product_name' => $existingStock->product_name,
+                        'transaction_type' => 'in',
+                        'quantity_before' => $quantityBefore,
+                        'quantity_changed' => $data['quantity'],
+                        'quantity_after' => $existingStock->quantity,
+                        'notes' => 'Auto increment on duplicate stock creation',
+                        'created_by' => auth()->id(),
+                    ]);
                     
                     DB::commit();
 
@@ -78,6 +97,23 @@ class StockController extends Controller
                 // Create new stock if doesn't exist
                 $data['last_restocked_date'] = now();
                 $stock = Stock::create($data);
+
+                // Record initial stock transaction
+                StockTransaction::create([
+                    'stock_id' => $stock->stock_id,
+                    'product_id' => $stock->product_id,
+                    'branch_id' => $stock->branch_id,
+                    'brand_id' => $stock->brand_id,
+                    'category_id' => $stock->category_id,
+                    'subcategory_id' => $stock->subcategory_id,
+                    'product_name' => $stock->product_name,
+                    'transaction_type' => 'initial',
+                    'quantity_before' => 0,
+                    'quantity_changed' => $data['quantity'],
+                    'quantity_after' => $data['quantity'],
+                    'notes' => 'Initial stock creation',
+                    'created_by' => auth()->id(),
+                ]);
 
                 return response()->json([
                     'success' => true,
@@ -127,9 +163,27 @@ class StockController extends Controller
 
                 DB::beginTransaction();
 
+                $quantityBefore = $stock->quantity;
                 $stock->quantity += $data['quantity'];
                 $stock->last_restocked_date = now();
                 $stock->save();
+
+                // Record transaction
+                StockTransaction::create([
+                    'stock_id' => $stock->stock_id,
+                    'product_id' => $stock->product_id,
+                    'branch_id' => $stock->branch_id,
+                    'brand_id' => $stock->brand_id,
+                    'category_id' => $stock->category_id,
+                    'subcategory_id' => $stock->subcategory_id,
+                    'product_name' => $stock->product_name,
+                    'transaction_type' => 'in',
+                    'quantity_before' => $quantityBefore,
+                    'quantity_changed' => $data['quantity'],
+                    'quantity_after' => $stock->quantity,
+                    'notes' => 'Stock added via addStock method',
+                    'created_by' => auth()->id(),
+                ]);
 
                 DB::commit();
 
@@ -137,7 +191,7 @@ class StockController extends Controller
                     'success' => true,
                     'message' => 'Stock quantity increased successfully',
                     'data' => $stock,
-                    'previous_quantity' => $stock->quantity - $data['quantity'],
+                    'previous_quantity' => $quantityBefore,
                     'added_quantity' => $data['quantity'],
                     'new_quantity' => $stock->quantity
                 ], 200);
@@ -202,6 +256,23 @@ class StockController extends Controller
                 $previousQuantity = $stock->quantity;
                 $stock->quantity -= $data['quantity'];
                 $stock->save();
+
+                // Record transaction
+                StockTransaction::create([
+                    'stock_id' => $stock->stock_id,
+                    'product_id' => $stock->product_id,
+                    'branch_id' => $stock->branch_id,
+                    'brand_id' => $stock->brand_id,
+                    'category_id' => $stock->category_id,
+                    'subcategory_id' => $stock->subcategory_id,
+                    'product_name' => $stock->product_name,
+                    'transaction_type' => 'out',
+                    'quantity_before' => $previousQuantity,
+                    'quantity_changed' => -$data['quantity'],
+                    'quantity_after' => $stock->quantity,
+                    'notes' => 'Stock removed via removeStock method',
+                    'created_by' => auth()->id(),
+                ]);
 
                 DB::commit();
 
@@ -393,6 +464,128 @@ class StockController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve product stocks',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ========== STOCK TRANSACTION HISTORY METHODS ==========
+
+    /**
+     * Get stock transaction history
+     */
+    public function getTransactionHistory($stock_id = null)
+    {
+        try {
+            $query = StockTransaction::with(['stock', 'product', 'branch', 'brand', 'category', 'subcategory', 'creator'])
+                                     ->orderBy('created_at', 'desc');
+            
+            if ($stock_id) {
+                $query->where('stock_id', $stock_id);
+            }
+            
+            $transactions = $query->get();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction history retrieved successfully',
+                'count' => $transactions->count(),
+                'data' => $transactions
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve transaction history',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get transaction history by product
+     */
+    public function getTransactionsByProduct($product_id)
+    {
+        try {
+            $transactions = StockTransaction::with(['stock', 'product', 'branch', 'brand', 'category', 'subcategory', 'creator'])
+                                           ->where('product_id', $product_id)
+                                           ->orderBy('created_at', 'desc')
+                                           ->get();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Product transaction history retrieved successfully',
+                'count' => $transactions->count(),
+                'data' => $transactions
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve product transaction history',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get transaction history by branch
+     */
+    public function getTransactionsByBranch($branch_id)
+    {
+        try {
+            $transactions = StockTransaction::with(['stock', 'product', 'branch', 'brand', 'category', 'subcategory', 'creator'])
+                                           ->where('branch_id', $branch_id)
+                                           ->orderBy('created_at', 'desc')
+                                           ->get();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Branch transaction history retrieved successfully',
+                'count' => $transactions->count(),
+                'data' => $transactions
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve branch transaction history',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get transaction history by date range
+     */
+    public function getTransactionsByDateRange(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after_or_equal:start_date',
+                'transaction_type' => 'nullable|in:in,out,adjustment,initial',
+            ]);
+
+            $query = StockTransaction::with(['stock', 'product', 'branch', 'brand', 'category', 'subcategory', 'creator'])
+                                     ->whereBetween('created_at', [$data['start_date'], $data['end_date']]);
+            
+            if (isset($data['transaction_type'])) {
+                $query->where('transaction_type', $data['transaction_type']);
+            }
+
+            $transactions = $query->orderBy('created_at', 'desc')->get();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction history retrieved successfully',
+                'count' => $transactions->count(),
+                'start_date' => $data['start_date'],
+                'end_date' => $data['end_date'],
+                'data' => $transactions
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve transaction history',
                 'error' => $e->getMessage()
             ], 500);
         }
