@@ -30,6 +30,7 @@ class SubCategoryController extends Controller
     public function store(Request $request)
     {
         try {
+            if(auth()->user()->role === 'admin') {
             $data = $request->validate([
                 'subcategory_name' => 'required|string|max:255',
                 'description' => 'nullable|string',
@@ -44,6 +45,13 @@ class SubCategoryController extends Controller
                 'message' => 'Subcategory created successfully',
                 'data' => $subcategory
             ], 201);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -56,7 +64,9 @@ class SubCategoryController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $subcategory = SubCategory::find($id);
+
+            if(auth()->user()->role === 'admin') {
+           $subcategory = SubCategory::find($id);
             
             if (!$subcategory) {
                 return response()->json([
@@ -67,9 +77,9 @@ class SubCategoryController extends Controller
             }
 
             $data = $request->validate([
-                'subcategory_name' => 'required|string|max:255',
+                'subcategory_name' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
-                'category_id' => 'required|exists:categories,category_id',
+                'category_id' => 'nullable|exists:categories,category_id',
                 'created_date' => 'nullable|date',
             ]);
 
@@ -80,6 +90,15 @@ class SubCategoryController extends Controller
                 'message' => 'Subcategory updated successfully',
                 'data' => $subcategory
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -92,6 +111,7 @@ class SubCategoryController extends Controller
     public function destroy($id)
     {
         try {
+            if(auth()->user()->role === 'admin') {
             $subcategory = SubCategory::find($id);
             
             if (!$subcategory) {
@@ -109,6 +129,15 @@ class SubCategoryController extends Controller
                 'message' => 'Subcategory deleted successfully',
                 'data' => null
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

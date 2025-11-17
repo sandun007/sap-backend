@@ -13,8 +13,8 @@ return new class extends Migration
             $table->string('order_number')->unique();
             $table->date('order_date')->nullable();
             $table->unsignedBigInteger('customer_id');
-            $table->unsignedBigInteger('branch_id');
-            $table->unsignedBigInteger('employee_id');
+            $table->unsignedBigInteger('branch_id')->nullable();      // ⬅ nullable
+            $table->unsignedBigInteger('employee_id')->nullable();    // ⬅ nullable
             $table->float('total_amount')->default(0);
             $table->string('status')->nullable();
             $table->string('payment_status')->nullable();
@@ -24,8 +24,8 @@ return new class extends Migration
 
             // Foreign keys
             $table->foreign('customer_id')->references('customer_id')->on('customers')->onDelete('cascade');
-            $table->foreign('branch_id')->references('branch_id')->on('branches')->onDelete('cascade');
-            $table->foreign('employee_id')->references('employee_id')->on('employees')->onDelete('cascade');
+            $table->foreign('branch_id')->references('branch_id')->on('branches')->onDelete('set null');    // ⬅ allow null
+            $table->foreign('employee_id')->references('employee_id')->on('employees')->onDelete('set null'); // ⬅ allow null
         });
     }
 

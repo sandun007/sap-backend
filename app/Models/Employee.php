@@ -25,4 +25,8 @@ class Employee extends Model
         'is_active',
     ];
 
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id', 'department_id');
+    }
 }

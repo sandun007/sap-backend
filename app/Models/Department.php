@@ -20,4 +20,17 @@ class Department extends Model
         'created_date',
     ];
 
+
+
+
+    public function manager()
+    {
+        return $this->belongsTo(Employee::class, 'manager_id', 'employee_id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'branch_id');
+    }
+
 }

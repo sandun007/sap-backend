@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use Exception;
@@ -12,7 +12,8 @@ class OrderController extends Controller
     public function index()
     {
         try {
-            $orders = Order::all();
+            $orders = Order::with('customer','branch','employee')->get();
+           
             
             return response()->json([
                 'success' => true,
@@ -30,36 +31,63 @@ class OrderController extends Controller
 
     // Add new order
     public function store(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'order_number' => 'required|string|unique:orders,order_number',
-                'order_date' => 'nullable|date',
-                'customer_id' => 'required|integer',
-                'branch_id' => 'required|integer',
-                'employee_id' => 'required|integer',
-                'total_amount' => 'required|numeric|min:0',
-                'status' => 'nullable|string',
-                'payment_status' => 'nullable|string',
-                'shipping_address' => 'nullable|string',
-                'notes' => 'nullable|string',
-            ]);
+{
+    try {
+        $user = auth()->user();
+        $userEmail = auth()->user()->email;
 
-            $order = Order::create($data);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Order created successfully',
-                'data' => $order
-            ], 201);
-        } catch (Exception $e) {
+        if ($user->role !== 'customer') {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create order',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Only customers can place orders',
+            ], 403);
         }
+
+        // Get customer ID from customers table
+        $userid = Customer::where('email', $userEmail)->value('customer_id');
+        
+        if (!$userid) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Customer not found for the authenticated user',
+            ], 404);
+        }
+
+        $data = $request->validate([
+            'order_number' => 'required|string|unique:orders,order_number',
+            'order_date' => 'nullable|date',
+            'branch_id' => 'nullable|integer|exists:branches,branch_id',
+            'employee_id' => 'nullable|integer|exists:employees,employee_id', // Validates if provided
+            'total_amount' => 'required|numeric|min:0',
+            'status' => 'nullable|string',
+            'payment_status' => 'nullable|string',
+            'shipping_address' => 'nullable|string',
+            'notes' => 'nullable|string',
+        ]);
+
+        $data['customer_id'] = $userid;
+        
+        // Remove employee_id if it's null to avoid foreign key issues
+        if (empty($data['employee_id'])) {
+            unset($data['employee_id']);
+        }
+
+        $order = Order::create($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order created successfully',
+            'data' => $order
+        ], 201);
+
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to create order',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
     // Update order
     public function update(Request $request, $id)
@@ -76,12 +104,12 @@ class OrderController extends Controller
             }
 
             $data = $request->validate([
-                'order_number' => 'required|string|unique:orders,order_number,' . $id . ',order_id',
+                'order_number' => 'nullable|string|unique:orders,order_number,' . $id . ',order_id',
                 'order_date' => 'nullable|date',
-                'customer_id' => 'required|integer',
-                'branch_id' => 'required|integer',
-                'employee_id' => 'required|integer',
-                'total_amount' => 'required|numeric|min:0',
+                'customer_id' => 'nullable|integer',
+                'branch_id' => 'nullable|integer',
+                'employee_id' => 'nullable|integer',
+                'total_amount' => 'nullable|numeric|min:0',
                 'status' => 'nullable|string',
                 'payment_status' => 'nullable|string',
                 'shipping_address' => 'nullable|string',

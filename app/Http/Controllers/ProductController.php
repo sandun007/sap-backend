@@ -12,7 +12,7 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::with(['brand', 'subcategory'])->get();
+            $products = Product::with(['brand', 'subcategory','user'])->get();
             
             return response()->json([
                 'success' => true,
@@ -30,38 +30,39 @@ class ProductController extends Controller
 
     // Add new product
     public function store(Request $request)
-    {
-        try {
-            $userid = auth()->user()->id;
-            
-            $data = $request->validate([
-                'product_name' => 'required|string|max:255',
-                'brand_id' => 'required|exists:brands,brand_id',
-                'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
-                'price' => 'required|numeric',
-                'unit' => 'required|string|max:50',
-                'status' => 'nullable|string',
-                'description' => 'nullable|string',
-                'user_id' => 'required|string',
-            ]);
+{
+    try {
+        $userid = auth()->user()->id;
+        
+        $data = $request->validate([
+            'product_name' => 'required|string|max:255',
+            'brand_id' => 'required|exists:brands,brand_id',
+            'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
+            'price' => 'required|numeric',
+            'unit' => 'required|string|max:50',
+            'status' => 'nullable|string',
+            'description' => 'nullable|string',
+        ]);
 
-            $data['user_id'] = $userid;
+        $data['user_id'] = $userid;
 
-            $product = Product::create($data);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Product created successfully',
-                'data' => $product
-            ], 201);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create product',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        $product = Product::create($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product created successfully',
+            'data' => $product
+        ], 201);
+
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to create product',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
 
     // Show single product
     public function show($id)
@@ -106,11 +107,11 @@ class ProductController extends Controller
             }
 
             $data = $request->validate([
-                'product_name' => 'required|string|max:255',
-                'brand_id' => 'required|exists:brands,brand_id',
-                'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
-                'price' => 'required|numeric',
-                'unit' => 'required|string|max:50',
+                'product_name' => 'nullable|string|max:255',
+                'brand_id' => 'nullable|exists:brands,brand_id',
+                'subcategory_id' => 'nullable|exists:sub_categories,subcategory_id',
+                'price' => 'nullable|numeric',
+                'unit' => 'nullable|string|max:50',
                 'status' => 'nullable|string',
                 'description' => 'nullable|string',
             ]);

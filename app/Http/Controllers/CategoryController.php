@@ -32,7 +32,9 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         try {
-            $data = $request->validate([
+
+            if(auth()->user()->role === 'admin') {
+           $data = $request->validate([
                 'category_name' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'created_date' => 'nullable|date',
@@ -46,6 +48,14 @@ class CategoryController extends Controller
                 'message' => 'Category created successfully',
                 'data' => $category
             ], 201);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -59,7 +69,10 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $category = Category::find($id);
+            
+
+            if(auth()->user()->role === 'admin') {
+             $category = Category::find($id);
             
             if (!$category) {
                 return response()->json([
@@ -83,6 +96,14 @@ class CategoryController extends Controller
                 'message' => 'Category updated successfully',
                 'data' => $category
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+           
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -96,6 +117,8 @@ class CategoryController extends Controller
     public function destroy($id)
     {
         try {
+
+            if(auth()->user()->role === 'admin') {
             $category = Category::find($id);
             
             if (!$category) {
@@ -113,6 +136,14 @@ class CategoryController extends Controller
                 'message' => 'Category deleted successfully',
                 'data' => null
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

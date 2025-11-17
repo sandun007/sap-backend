@@ -30,6 +30,7 @@ class DepartmentController extends Controller
     public function store(Request $request)
     {
         try {
+            if(auth()->user()->role === 'admin') {
             $data = $request->validate([
                 'department_name' => 'required|string|max:255',
                 'description' => 'nullable|string',
@@ -45,6 +46,14 @@ class DepartmentController extends Controller
                 'message' => 'Department created successfully',
                 'data' => $department
             ], 201);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -57,6 +66,7 @@ class DepartmentController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            if(auth()->user()->role === 'admin') {
             $department = Department::find($id);
             
             if (!$department) {
@@ -68,10 +78,10 @@ class DepartmentController extends Controller
             }
 
             $data = $request->validate([
-                'department_name' => 'required|string|max:255',
+                'department_name' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
                 'manager_id' => 'nullable|exists:employees,employee_id',
-                'branch_id' => 'required|exists:branches,branch_id',
+                'branch_id' => 'nullable|exists:branches,branch_id',
                 'created_date' => 'nullable|date',
             ]);
 
@@ -82,6 +92,14 @@ class DepartmentController extends Controller
                 'message' => 'Department updated successfully',
                 'data' => $department
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -94,6 +112,7 @@ class DepartmentController extends Controller
     public function destroy($id)
     {
         try {
+            if(auth()->user()->role === 'admin') {
             $department = Department::find($id);
             
             if (!$department) {
@@ -111,6 +130,14 @@ class DepartmentController extends Controller
                 'message' => 'Department deleted successfully',
                 'data' => null
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

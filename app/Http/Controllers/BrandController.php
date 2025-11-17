@@ -30,7 +30,8 @@ class BrandController extends Controller
     public function store(Request $request)
     {
         try {
-            $data = $request->validate([
+            if(auth()->user()->role === 'admin') {
+           $data = $request->validate([
                 'brand_name' => 'required|string|max:255',
                 'contact_person' => 'nullable|string|max:255',
                 'phone' => 'nullable|string|max:20',
@@ -46,6 +47,14 @@ class BrandController extends Controller
                 'message' => 'Brand created successfully',
                 'data' => $brand
             ], 201);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -58,6 +67,7 @@ class BrandController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            if(auth()->user()->role === 'admin') {
             $brand = Brand::find($id);
             
             if (!$brand) {
@@ -69,7 +79,7 @@ class BrandController extends Controller
             }
 
             $data = $request->validate([
-                'brand_name' => 'required|string|max:255',
+                'brand_name' => 'nullable|string|max:255',
                 'contact_person' => 'nullable|string|max:255',
                 'phone' => 'nullable|string|max:20',
                 'email' => 'nullable|email|unique:brands,email,' . $id . ',brand_id',
@@ -84,6 +94,14 @@ class BrandController extends Controller
                 'message' => 'Brand updated successfully',
                 'data' => $brand
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -96,6 +114,7 @@ class BrandController extends Controller
     public function destroy($id)
     {
         try {
+            if(auth()->user()->role === 'admin') {
             $brand = Brand::find($id);
             
             if (!$brand) {
@@ -113,6 +132,14 @@ class BrandController extends Controller
                 'message' => 'Brand deleted successfully',
                 'data' => null
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

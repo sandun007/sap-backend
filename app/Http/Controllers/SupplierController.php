@@ -11,6 +11,7 @@ class SupplierController extends Controller
     public function index()
     {
         try {
+           if(auth()->user()->role === 'admin' || auth()->user()->role === 'employee') {
             $suppliers = Supplier::all();
             
             return response()->json([
@@ -18,6 +19,14 @@ class SupplierController extends Controller
                 'message' => 'Suppliers retrieved successfully',
                 'data' => $suppliers
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -30,6 +39,7 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         try {
+            if(auth()->user()->role === 'admin' || auth()->user()->role === 'employee') {
             $data = $request->validate([
                 'supplier_name' => 'required|string|max:255',
                 'contact_person' => 'nullable|string|max:255',
@@ -48,6 +58,14 @@ class SupplierController extends Controller
                 'message' => 'Supplier created successfully',
                 'data' => $supplier
             ], 201);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -60,6 +78,7 @@ class SupplierController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            if(auth()->user()->role === 'admin') {
             $supplier = Supplier::find($id);
             
             if (!$supplier) {
@@ -71,7 +90,7 @@ class SupplierController extends Controller
             }
 
             $data = $request->validate([
-                'supplier_name' => 'required|string|max:255',
+                'supplier_name' => 'nullable|string|max:255',
                 'contact_person' => 'nullable|string|max:255',
                 'phone' => 'nullable|string|max:20',
                 'email' => 'nullable|email|unique:suppliers,email,' . $id . ',supplier_id',
@@ -88,6 +107,14 @@ class SupplierController extends Controller
                 'message' => 'Supplier updated successfully',
                 'data' => $supplier
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -100,6 +127,7 @@ class SupplierController extends Controller
     public function destroy($id)
     {
         try {
+            if(auth()->user()->role === 'admin') {
             $supplier = Supplier::find($id);
             
             if (!$supplier) {
@@ -117,6 +145,14 @@ class SupplierController extends Controller
                 'message' => 'Supplier deleted successfully',
                 'data' => null
             ], 200);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+            
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

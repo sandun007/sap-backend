@@ -49,6 +49,16 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('stocks', StockController::class);
     Route::apiResource('subcategories', SubCategoryController::class);
     Route::apiResource('orders', OrderController::class);
+
+    // Stock Inventory Operations
+    Route::post('stocks/{id}/add', [StockController::class, 'addStock']); 
+    Route::post('stocks/{id}/remove', [StockController::class, 'removeStock']);
+    Route::get('stocks/alerts/low-stock', [StockController::class, 'getLowStock']); 
+    
+    // Optional: Additional stock-related routes
+    Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']); 
+    Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']); 
+
 });
 
 Route::post('/customer/create', [CustomerController::class, 'store']);

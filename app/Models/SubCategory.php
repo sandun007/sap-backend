@@ -18,5 +18,8 @@ class SubCategory extends Model
         'created_date',
     ];
 
-
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id', 'category_id');
+    }
 }
