@@ -22,7 +22,6 @@ class Employee extends Model
         'address',
         'date_of_birth',
         'department_id',
-        'manager_id',
         'is_active',
     ];
 

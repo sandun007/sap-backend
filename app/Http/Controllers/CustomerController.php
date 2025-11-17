@@ -13,7 +13,7 @@ class CustomerController extends Controller
     public function index()
     {
         $user = auth()->user();
-        if($user && $user->role === 'customer') {
+        if($user && $user->role === 'admin') {
             return Customer::all();
         } else {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -85,7 +85,7 @@ public function store(Request $request)
         $customer = Customer::find($id);
 
             
-        if (!$customer) {
+        if (!$customer || auth()->user()->role !== 'admin') {
             return response()->json(['message' => 'Customer not found'], 404);
         }
         $request->validate([

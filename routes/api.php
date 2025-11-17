@@ -52,7 +52,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::post('/customer/create', [CustomerController::class, 'store']);
-Route::post('/employee/create', [EmployeeController::class, 'store']);
 Route::post('/admin/create', [AdminController::class, 'createAdmin']);
 
 

@@ -11,13 +11,19 @@ class EmployeeController extends Controller
 {
     public function index()
     {
-        return Employee::with(['department', 'manager'])->get();
+        $user = auth()->user();
+        if($user && $user->role === 'admin') {
+            return Employee::all();
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
     }
 
 
 public function store(Request $request)
 {
-    $data = $request->validate([
+    if(auth()->user()->role === 'admin') {
+            $data = $request->validate([
         'first_name' => 'required|string|max:255',
         'last_name' => 'required|string|max:255',
         'email' => 'required|email|unique:users,email',
@@ -28,10 +34,11 @@ public function store(Request $request)
         'address' => 'nullable|string',
         'date_of_birth' => 'nullable|date',
         'department_id' => 'required|exists:departments,department_id',
-        'manager_id' => 'nullable|exists:employees,employee_id',
         'is_active' => 'boolean',
         'password' => 'required|string|min:6',
     ]);
+
+   
 
     $user = User::create([
         'name'  => $data['first_name'] . ' ' . $data['last_name'],
@@ -49,38 +56,65 @@ public function store(Request $request)
         'user_id' => $user->id,
         'data' => $employee
     ], 201);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized',
+                'data' => null,
+            ], 403);
+        }
+
+
+    
 }
 
 
     public function update(Request $request, $id)
     {
-        $employee = Employee::findOrFail($id);
+       
+        
+        $employee = Employee::find($id);
+
+        if (!$employee || auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Employee not found'], 404);
+        }
+
 
         $data = $request->validate([
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'nullable|email|unique:employees,email,' . $id . ',employee_id',
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
             'hire_date' => 'nullable|date',
             'position' => 'nullable|string|max:255',
             'salary' => 'nullable|numeric',
             'address' => 'nullable|string',
             'date_of_birth' => 'nullable|date',
-            'department_id' => 'required|exists:departments,department_id',
+            'department_id' => 'nullable|exists:departments,department_id',
             'manager_id' => 'nullable|exists:employees,employee_id',
             'is_active' => 'boolean',
         ]);
+      
 
         $employee->update($data);
 
-        return $employee;
+        return response()->json([
+        'message' => 'Employee update successfully',
+        'data' => $employee
+    ], 201);
     }
 
     public function destroy($id)
     {
-        $employee = Employee::findOrFail($id);
+        $employee = Employee::find($id);
+
+        if (!$employee || auth()->user()->role !== 'admin') {
+            return response()->json(['message' => 'Employee not found'], 404);
+        }
+
         $employee->delete();
 
-        return ['message' => 'Employee deleted'];
+        return response()->json([
+        'message' => 'Employee delete successfully',
+    ], 200);
     }
 }

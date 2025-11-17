@@ -14,18 +14,22 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
-    // Add new product
-    public function store(Request $request)
-    {
-        $request->validate([
-            'product_name' => 'required|string|max:255',
-            'brand_id' => 'required|exists:brands,brand_id',
-            'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
-            'price' => 'required|numeric',
-            'unit' => 'required|string|max:50',
-            'status' => 'nullable|string',
-            'description' => 'nullable|string',
-        ]);
+        // Add new product
+        public function store(Request $request)
+        {
+            $userid = auth()->user()->id;
+            $request->validate([
+                'product_name' => 'required|string|max:255',
+                'brand_id' => 'required|exists:brands,brand_id',
+                'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
+                'price' => 'required|numeric',
+                'unit' => 'required|string|max:50',
+                'status' => 'nullable|string',
+                'description' => 'nullable|string',
+                'user_id' => 'required|string',
+            ]);
+
+            $request->merge(['user_id' => $userid]);
 
         $product = Product::create($request->all());
         return response()->json($product, 201);

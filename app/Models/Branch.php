@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Branch extends Model
 {
+    protected $table = 'branches';
+    protected $primaryKey = 'branch_id';
+    public $incrementing = true;
+    protected $keyType = 'int';
     use HasFactory;
     protected $fillable = [
         'branch_name',

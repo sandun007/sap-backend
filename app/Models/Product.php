@@ -19,6 +19,7 @@ class Product extends Model
         'unit',
         'status',
         'description',
+        'user_id',
     ];
 
 
