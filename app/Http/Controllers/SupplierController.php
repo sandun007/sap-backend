@@ -4,55 +4,125 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Supplier;
+use Exception;
 
 class SupplierController extends Controller
 {
     public function index()
     {
-        return Supplier::all();
+        try {
+            $suppliers = Supplier::all();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Suppliers retrieved successfully',
+                'data' => $suppliers
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve suppliers',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'supplier_name' => 'required|string|max:255',
-            'contact_person' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|unique:suppliers,email',
-            'address' => 'nullable|string',
-            'tax_id' => 'nullable|string|max:50',
-            'payment_terms' => 'nullable|string|max:255',
-            'created_date' => 'nullable|date',
-        ]);
+        try {
+            $data = $request->validate([
+                'supplier_name' => 'required|string|max:255',
+                'contact_person' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'email' => 'nullable|email|unique:suppliers,email',
+                'address' => 'nullable|string',
+                'tax_id' => 'nullable|string|max:50',
+                'payment_terms' => 'nullable|string|max:255',
+                'created_date' => 'nullable|date',
+            ]);
 
-        return Supplier::create($data);
+            $supplier = Supplier::create($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier created successfully',
+                'data' => $supplier
+            ], 201);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create supplier',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-        $supplier = Supplier::findOrFail($id);
+        try {
+            $supplier = Supplier::find($id);
+            
+            if (!$supplier) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Supplier not found',
+                    'data' => null
+                ], 404);
+            }
 
-        $data = $request->validate([
-            'supplier_name' => 'required|string|max:255',
-            'contact_person' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|unique:suppliers,email,' . $id . ',supplier_id',
-            'address' => 'nullable|string',
-            'tax_id' => 'nullable|string|max:50',
-            'payment_terms' => 'nullable|string|max:255',
-            'created_date' => 'nullable|date',
-        ]);
+            $data = $request->validate([
+                'supplier_name' => 'required|string|max:255',
+                'contact_person' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'email' => 'nullable|email|unique:suppliers,email,' . $id . ',supplier_id',
+                'address' => 'nullable|string',
+                'tax_id' => 'nullable|string|max:50',
+                'payment_terms' => 'nullable|string|max:255',
+                'created_date' => 'nullable|date',
+            ]);
 
-        $supplier->update($data);
+            $supplier->update($data);
 
-        return $supplier;
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier updated successfully',
+                'data' => $supplier
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update supplier',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id)
     {
-        $supplier = Supplier::findOrFail($id);
-        $supplier->delete();
+        try {
+            $supplier = Supplier::find($id);
+            
+            if (!$supplier) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Supplier not found',
+                    'data' => null
+                ], 404);
+            }
 
-        return ['message' => 'Supplier deleted'];
+            $supplier->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Supplier deleted successfully',
+                'data' => null
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete supplier',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

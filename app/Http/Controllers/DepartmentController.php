@@ -4,49 +4,119 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Department;
+use Exception;
 
 class DepartmentController extends Controller
 {
     public function index()
     {
-        return Department::with(['manager', 'branch'])->get();
+        try {
+            $departments = Department::with(['manager', 'branch'])->get();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Departments retrieved successfully',
+                'data' => $departments
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve departments',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'department_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'manager_id' => 'nullable|exists:employees,employee_id',
-            'branch_id' => 'required|exists:branches,branch_id',
-            'created_date' => 'nullable|date',
-        ]);
+        try {
+            $data = $request->validate([
+                'department_name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'manager_id' => 'nullable|exists:employees,employee_id',
+                'branch_id' => 'required|exists:branches,branch_id',
+                'created_date' => 'nullable|date',
+            ]);
 
-        return Department::create($data);
+            $department = Department::create($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Department created successfully',
+                'data' => $department
+            ], 201);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create department',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, $id)
     {
-        $department = Department::findOrFail($id);
+        try {
+            $department = Department::find($id);
+            
+            if (!$department) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Department not found',
+                    'data' => null
+                ], 404);
+            }
 
-        $data = $request->validate([
-            'department_name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'manager_id' => 'nullable|exists:employees,employee_id',
-            'branch_id' => 'required|exists:branches,branch_id',
-            'created_date' => 'nullable|date',
-        ]);
+            $data = $request->validate([
+                'department_name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'manager_id' => 'nullable|exists:employees,employee_id',
+                'branch_id' => 'required|exists:branches,branch_id',
+                'created_date' => 'nullable|date',
+            ]);
 
-        $department->update($data);
+            $department->update($data);
 
-        return $department;
+            return response()->json([
+                'success' => true,
+                'message' => 'Department updated successfully',
+                'data' => $department
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update department',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy($id)
     {
-        $department = Department::findOrFail($id);
-        $department->delete();
+        try {
+            $department = Department::find($id);
+            
+            if (!$department) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Department not found',
+                    'data' => null
+                ], 404);
+            }
 
-        return ['message' => 'Department deleted'];
+            $department->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Department deleted successfully',
+                'data' => null
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete department',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -4,21 +4,37 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use Exception;
 
 class ProductController extends Controller
 {
     // List all products
     public function index()
     {
-        $products = Product::with(['brand', 'subcategory'])->get();
-        return response()->json($products);
+        try {
+            $products = Product::with(['brand', 'subcategory'])->get();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Products retrieved successfully',
+                'data' => $products
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve products',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-        // Add new product
-        public function store(Request $request)
-        {
+    // Add new product
+    public function store(Request $request)
+    {
+        try {
             $userid = auth()->user()->id;
-            $request->validate([
+            
+            $data = $request->validate([
                 'product_name' => 'required|string|max:255',
                 'brand_id' => 'required|exists:brands,brand_id',
                 'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
@@ -29,53 +45,119 @@ class ProductController extends Controller
                 'user_id' => 'required|string',
             ]);
 
-            $request->merge(['user_id' => $userid]);
+            $data['user_id'] = $userid;
 
-        $product = Product::create($request->all());
-        return response()->json($product, 201);
+            $product = Product::create($data);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Product created successfully',
+                'data' => $product
+            ], 201);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create product',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     // Show single product
     public function show($id)
     {
-        $product = Product::with(['brand', 'subcategory'])->find($id);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
+        try {
+            $product = Product::with(['brand', 'subcategory'])->find($id);
+            
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found',
+                    'data' => null
+                ], 404);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Product retrieved successfully',
+                'data' => $product
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve product',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        return response()->json($product);
     }
 
     // Update product
     public function update(Request $request, $id)
     {
-        $product = Product::find($id);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
+        try {
+            $product = Product::find($id);
+            
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found',
+                    'data' => null
+                ], 404);
+            }
+
+            $data = $request->validate([
+                'product_name' => 'required|string|max:255',
+                'brand_id' => 'required|exists:brands,brand_id',
+                'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
+                'price' => 'required|numeric',
+                'unit' => 'required|string|max:50',
+                'status' => 'nullable|string',
+                'description' => 'nullable|string',
+            ]);
+
+            $product->update($data);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Product updated successfully',
+                'data' => $product
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update product',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $request->validate([
-            'product_name' => 'required|string|max:255',
-            'brand_id' => 'required|exists:brands,brand_id',
-            'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
-            'price' => 'required|numeric',
-            'unit' => 'required|string|max:50',
-            'status' => 'nullable|string',
-            'description' => 'nullable|string',
-        ]);
-
-        $product->update($request->all());
-        return response()->json($product);
     }
 
     // Delete product
     public function destroy($id)
     {
-        $product = Product::find($id);
-        if (!$product) {
-            return response()->json(['message' => 'Product not found'], 404);
-        }
+        try {
+            $product = Product::find($id);
+            
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found',
+                    'data' => null
+                ], 404);
+            }
 
-        $product->delete();
-        return response()->json(['message' => 'Product deleted successfully']);
+            $product->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Product deleted successfully',
+                'data' => null
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete product',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
