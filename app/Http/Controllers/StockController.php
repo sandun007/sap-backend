@@ -430,10 +430,12 @@ class StockController extends Controller
             $stocks = Stock::with(['product', 'branch', 'brand', 'category', 'subcategory'])
                           ->where('branch_id', $branch_id)
                           ->get();
+            $totalQuantity = $stocks->sum('quantity');
             
             return response()->json([
                 'success' => true,
                 'message' => 'Branch stocks retrieved successfully',
+                'total_quantity' => $totalQuantity,
                 'data' => $stocks
             ], 200);
         } catch (Exception $e) {
@@ -449,25 +451,30 @@ class StockController extends Controller
      * Get stock by product
      */
     public function getStockByProduct($product_id)
-    {
-        try {
-            $stocks = Stock::with(['product', 'branch', 'brand', 'category', 'subcategory'])
-                          ->where('product_id', $product_id)
-                          ->get();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Product stocks retrieved successfully',
-                'data' => $stocks
-            ], 200);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to retrieve product stocks',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+{
+    try {
+        $stocks = Stock::with(['product', 'branch', 'brand', 'category', 'subcategory'])
+                        ->where('product_id', $product_id)
+                        ->get();
+
+        // Calculate total quantity
+        $totalQuantity = $stocks->sum('quantity');
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product stocks retrieved successfully',
+            'total_quantity' => $totalQuantity,
+            'data' => $stocks
+        ], 200);
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to retrieve product stocks',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
 
     // ========== STOCK TRANSACTION HISTORY METHODS ==========
 
