@@ -35,7 +35,7 @@ use App\Http\Controllers\AdminController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-
+Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('customers', CustomerController::class);
@@ -51,9 +51,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('orders', OrderController::class);
 
     // Stock Inventory Operations
-    Route::post('stocks/{id}/add', [StockController::class, 'addStock']); 
+    Route::post('stocks/{id}/add', [StockController::class, 'addStock']);
     Route::post('stocks/{id}/remove', [StockController::class, 'removeStock']);
-    Route::get('stocks/alerts/low-stock', [StockController::class, 'getLowStock']); 
+    Route::get('stocks/alerts/low-stock', [StockController::class, 'getLowStock']);
 
     // Stock Transaction History
     Route::get('stock-transactions', [StockController::class, 'getTransactionHistory']); // All transactions
@@ -61,10 +61,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('stock-transactions/product/{product_id}', [StockController::class, 'getTransactionsByProduct']); // By product
     Route::get('stock-transactions/branch/{branch_id}', [StockController::class, 'getTransactionsByBranch']); // By branch
     Route::post('stock-transactions/date-range', [StockController::class, 'getTransactionsByDateRange']); // By date range
-    
+
     // Optional: Additional stock-related routes
-    Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']); 
-    Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']); 
+    Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']);
+    Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']);
 
 });
 
