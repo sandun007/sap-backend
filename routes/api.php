@@ -42,6 +42,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('products', ProductController::class);
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('suppliers', SupplierController::class);
+    Route::post('/suppliers/import', [SupplierController::class, 'import']);
     Route::apiResource('departments', DepartmentController::class);
     Route::apiResource('brands', BrandController::class);
     Route::apiResource('branches', BranchController::class);
@@ -70,5 +71,3 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 Route::post('/customer/create', [CustomerController::class, 'store']);
 Route::post('/admin/create', [AdminController::class, 'createAdmin']);
-
-

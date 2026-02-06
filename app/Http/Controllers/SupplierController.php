@@ -13,7 +13,7 @@ class SupplierController extends Controller
         try {
            if(auth()->user()->role === 'admin' || auth()->user()->role === 'employee') {
             $suppliers = Supplier::all();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Suppliers retrieved successfully',
@@ -26,7 +26,7 @@ class SupplierController extends Controller
                 'data' => null,
             ], 403);
         }
-            
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -41,6 +41,7 @@ class SupplierController extends Controller
         try {
             if(auth()->user()->role === 'admin' || auth()->user()->role === 'employee') {
             $data = $request->validate([
+                'supplier_id'=> 'required|string|max:32|unique:suppliers,supplier_id',
                 'supplier_name' => 'required|string|max:255',
                 'contact_person' => 'nullable|string|max:255',
                 'phone' => 'nullable|string|max:20',
@@ -65,7 +66,7 @@ class SupplierController extends Controller
                 'data' => null,
             ], 403);
         }
-            
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -80,7 +81,7 @@ class SupplierController extends Controller
         try {
             if(auth()->user()->role === 'admin') {
             $supplier = Supplier::find($id);
-            
+
             if (!$supplier) {
                 return response()->json([
                     'success' => false,
@@ -114,7 +115,7 @@ class SupplierController extends Controller
                 'data' => null,
             ], 403);
         }
-            
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -129,7 +130,7 @@ class SupplierController extends Controller
         try {
             if(auth()->user()->role === 'admin') {
             $supplier = Supplier::find($id);
-            
+
             if (!$supplier) {
                 return response()->json([
                     'success' => false,
@@ -152,7 +153,7 @@ class SupplierController extends Controller
                 'data' => null,
             ], 403);
         }
-            
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -161,4 +162,40 @@ class SupplierController extends Controller
             ], 500);
         }
     }
+
+    public function import(Request $request)
+    {
+        try {
+            
+            $request->validate([
+                'suppliers'=>'required|array',
+                'suppliers.*.supplier_name'=>'required|string|max:255',
+                'suppliers.*.contact_person'=>'nullable|string|max:255',
+                'suppliers.*.phone'=>'nullable|string|max:20',
+                'suppliers.*.email'=>'nullable|email|unique:suppliers,email',
+                'suppliers.*.address'=>'nullable|string',
+                'suppliers.*.tax_id'=>'nullable|string|max:50',
+                'suppliers.*.payment_terms'=>'nullable|string|max:255',
+                'suppliers.*.created_date'=>'nullable|date',
+            ]);
+            $imported = 0;
+            foreach ($request->suppliers as $supplierData){
+                Supplier::create($supplierData);
+                $imported++;
+            }
+            return response()->json([
+                'success' => true,
+                'message' => "imported {$imported} suppliers successfully",
+                'imported count' => $imported,
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to import suppliers',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
