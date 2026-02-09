@@ -44,6 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/suppliers/import', [SupplierController::class, 'import']);
     Route::apiResource('departments', DepartmentController::class);
     Route::apiResource('brands', BrandController::class);
+    Route::post('/brands/import', [BrandController::class, 'import']);
     Route::apiResource('branches', BranchController::class);
     Route::apiResource('employees', EmployeeController::class);
     Route::apiResource('stocks', StockController::class);

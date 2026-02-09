@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use App\Models\Brand;
 use Exception;
@@ -12,7 +13,7 @@ class BrandController extends Controller
     {
         try {
             $brands = Brand::all();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Brands retrieved successfully',
@@ -54,7 +55,7 @@ class BrandController extends Controller
                 'data' => null,
             ], 403);
         }
-            
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -69,7 +70,7 @@ class BrandController extends Controller
         try {
             if(auth()->user()->role === 'admin') {
             $brand = Brand::find($id);
-            
+
             if (!$brand) {
                 return response()->json([
                     'success' => false,
@@ -101,7 +102,7 @@ class BrandController extends Controller
                 'data' => null,
             ], 403);
         }
-            
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -116,7 +117,7 @@ class BrandController extends Controller
         try {
             if(auth()->user()->role === 'admin') {
             $brand = Brand::find($id);
-            
+
             if (!$brand) {
                 return response()->json([
                     'success' => false,
@@ -139,7 +140,7 @@ class BrandController extends Controller
                 'data' => null,
             ], 403);
         }
-            
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -148,4 +149,37 @@ class BrandController extends Controller
             ], 500);
         }
     }
+    public function import (Request $request)
+    {
+        try{
+
+            $request->validate([
+                'brand_name' => 'required|string|max:255',
+                'contact_person' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'email' => 'nullable|email|unique:brands,email',
+                'website' => 'nullable|string|max:255',
+                'created_date' => 'nullable|date',
+
+            ]);
+            $imported = 0;
+            foreach ($request->brands as $brandData){
+                Brand::create($brandData);
+                $imported++;
+            }
+            return response()->json([
+                'success' => true,
+                'message' => "imported {$imported} brands successfully",
+                'imported count' => $imported,
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to import brands',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
