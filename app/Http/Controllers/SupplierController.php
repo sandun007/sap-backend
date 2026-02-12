@@ -166,7 +166,7 @@ class SupplierController extends Controller
     public function import(Request $request)
     {
         try {
-            
+
             $request->validate([
                 'suppliers'=>'required|array',
                 'suppliers.*.supplier_name'=>'required|string|max:255',
