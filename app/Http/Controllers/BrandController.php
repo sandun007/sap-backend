@@ -11,14 +11,23 @@ class BrandController extends Controller
 {
     public function index()
     {
-        try {
-            $brands = Brand::all();
+        try{
+            if(auth()->user()->role === 'admin' || auth()->user()->role === 'brand') {
+                $brands = Brand::all();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Brands retrieved successfully',
                 'data' => $brands
             ], 200);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                    'data' => null,
+                ], 403);
+            }
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -28,10 +37,12 @@ class BrandController extends Controller
         }
     }
 
+
+
     public function store(Request $request)
     {
         try {
-            if(auth()->user()->role === 'admin') {
+            if(auth()->user()->role === 'admin'|| auth()->user()->role === 'brand') {
            $data = $request->validate([
                 'brand_name' => 'required|string|max:255',
                 'contact_person' => 'nullable|string|max:255',
@@ -154,6 +165,7 @@ class BrandController extends Controller
         try{
 
             $request->validate([
+                'brand'=>'required| array',
                 'brand_name' => 'required|string|max:255',
                 'contact_person' => 'nullable|string|max:255',
                 'phone' => 'nullable|string|max:20',
