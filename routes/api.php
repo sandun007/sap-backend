@@ -36,6 +36,7 @@ use App\Http\Controllers\AdminController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
+
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('products', ProductController::class);
@@ -71,3 +72,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 Route::post('/customer/create', [CustomerController::class, 'store']);
 Route::post('/admin/create', [AdminController::class, 'createAdmin']);
+
+
