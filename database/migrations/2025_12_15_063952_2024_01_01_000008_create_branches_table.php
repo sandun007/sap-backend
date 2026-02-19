@@ -12,13 +12,14 @@ return new class extends Migration
             $table->id('branch_id');
             $table->string('branch_name');
             $table->text('address')->nullable();
-            $table->string('phone')->nullable();
+            $table->string('phone_num1')->nullable();
+            $table->string('phone_num2')->nullable();
             $table->string('email')->nullable()->unique();
             $table->unsignedBigInteger('manager_id')->nullable(); // Will add FK later
             $table->date('opening_date')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             // NOTE: Foreign key for manager_id will be added in separate migration
         });
     }

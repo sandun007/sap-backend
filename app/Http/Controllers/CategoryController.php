@@ -154,4 +154,33 @@ class CategoryController extends Controller
             ], 500);
         }
     }
+    public function import(Request $request)
+    {
+        $categories = $request->input('categories', []);
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach ($categories as $data) {
+
+            $exists = Category::where('category_code', $data['category_code'])
+                ->orWhere('category_name', $data['category_name'])
+                ->exists();
+
+            if ($exists) {
+                $skipped++;
+                continue;
+            }
+
+            Category::create($data);
+            $imported++;
+        }
+
+        return response()->json([
+            'imported' => $imported,
+            'skipped' => $skipped,
+            'message' => "Imported $imported categories, skipped $skipped duplicates"
+        ]);
+    }
+
 }
