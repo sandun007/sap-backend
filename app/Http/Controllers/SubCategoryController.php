@@ -12,7 +12,7 @@ class SubCategoryController extends Controller
     {
         try {
             $subcategories = SubCategory::with('category')->get();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Subcategories retrieved successfully',
@@ -32,6 +32,7 @@ class SubCategoryController extends Controller
         try {
             if(auth()->user()->role === 'admin') {
             $data = $request->validate([
+                'subcategory_code' => 'required|string',
                 'subcategory_name' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'category_id' => 'required|exists:categories,category_id',
@@ -67,7 +68,7 @@ class SubCategoryController extends Controller
 
             if(auth()->user()->role === 'admin') {
            $subcategory = SubCategory::find($id);
-            
+
             if (!$subcategory) {
                 return response()->json([
                     'success' => false,
@@ -77,6 +78,7 @@ class SubCategoryController extends Controller
             }
 
             $data = $request->validate([
+                'subcategory_code' => 'required|string',
                 'subcategory_name' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
                 'category_id' => 'nullable|exists:categories,category_id',
@@ -98,7 +100,7 @@ class SubCategoryController extends Controller
             ], 403);
         }
 
-            
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
@@ -113,7 +115,7 @@ class SubCategoryController extends Controller
         try {
             if(auth()->user()->role === 'admin') {
             $subcategory = SubCategory::find($id);
-            
+
             if (!$subcategory) {
                 return response()->json([
                     'success' => false,
@@ -137,7 +139,7 @@ class SubCategoryController extends Controller
             ], 403);
         }
 
-            
+
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,

@@ -12,6 +12,7 @@ class SubCategory extends Model
     protected $primaryKey = 'subcategory_id';
 
     protected $fillable = [
+        'subcategory_code',
         'subcategory_name',
         'description',
         'category_id',

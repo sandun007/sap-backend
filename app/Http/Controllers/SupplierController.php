@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\Supplier;
 use Exception;
@@ -165,37 +166,31 @@ class SupplierController extends Controller
 
     public function import(Request $request)
     {
-        try {
+        $suppliers = $request->input('suppliers', []);
 
-            $request->validate([
-                'suppliers'=>'required|array',
-                'suppliers.*.supplier_name'=>'required|string|max:255',
-                'suppliers.*.contact_person'=>'nullable|string|max:255',
-                'suppliers.*.phone'=>'nullable|string|max:20',
-                'suppliers.*.email'=>'nullable|email|unique:suppliers,email',
-                'suppliers.*.address'=>'nullable|string',
-                'suppliers.*.tax_id'=>'nullable|string|max:50',
-                'suppliers.*.payment_terms'=>'nullable|string|max:255',
-                'suppliers.*.created_date'=>'nullable|date',
-            ]);
-            $imported = 0;
-            foreach ($request->suppliers as $supplierData){
-                Supplier::create($supplierData);
-                $imported++;
+        $imported = 0;
+        $skipped = 0;
+
+        foreach ($suppliers as $data) {
+
+            $exists = Supplier::where('supplier_name', $data['supplier_name'])
+                ->orWhere('email', $data['email'])
+                ->exists();
+
+            if ($exists) {
+                $skipped++;
+                continue;
             }
-            return response()->json([
-                'success' => true,
-                'message' => "imported {$imported} suppliers successfully",
-                'imported count' => $imported,
-            ], 200);
 
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to import suppliers',
-                'error' => $e->getMessage()
-            ], 500);
+            Category::create($data);
+            $imported++;
         }
+
+        return response()->json([
+            'imported' => $imported,
+            'skipped' => $skipped,
+            'message' => "Imported $imported Suppliers, skipped $skipped duplicates"
+        ]);
     }
 
 }
