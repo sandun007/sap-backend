@@ -11,7 +11,6 @@ return new class extends Migration
         Schema::table('employees', function (Blueprint $table) {
             // Add foreign keys after all tables are created
             $table->foreign('department_id')->references('department_id')->on('departments')->onDelete('cascade');
-            $table->foreign('manager_id')->references('employee_id')->on('employees')->onDelete('set null');
         });
     }
 
@@ -19,7 +18,6 @@ return new class extends Migration
     {
         Schema::table('employees', function (Blueprint $table) {
             $table->dropForeign(['department_id']);
-            $table->dropForeign(['manager_id']);
         });
     }
 };

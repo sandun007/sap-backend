@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Employee extends Model
 {
@@ -12,10 +13,15 @@ class Employee extends Model
     protected $primaryKey = 'employee_id';
 
     protected $fillable = [
+        'employee_code',
         'first_name',
         'last_name',
         'email',
-        'phone',
+        'phone_num1',
+        'phone_num2',
+        'nic_num',
+        'nic_front',
+        'nic_back',
         'hire_date',
         'position',
         'salary',
@@ -24,6 +30,7 @@ class Employee extends Model
         'department_id',
         'is_active',
     ];
+
 
     public function department()
     {

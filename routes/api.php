@@ -48,6 +48,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/brands/import', [BrandController::class, 'import']);
     Route::apiResource('branches', BranchController::class);
     Route::apiResource('employees', EmployeeController::class);
+    Route::post('/employees/import', [EmployeeController::class, 'import']);
     Route::apiResource('stocks', StockController::class);
     Route::apiResource('subcategories', SubCategoryController::class);
     Route::apiResource('orders', OrderController::class);

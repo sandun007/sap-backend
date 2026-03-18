@@ -2,14 +2,29 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
 use Illuminate\Http\Request;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Exception;
+use Illuminate\Support\Facades\Storage;
+
 
 class EmployeeController extends Controller
 {
+    private function formatEmployee($employee)
+    {
+        $employee->nic_front_url = $employee->nic_front
+            ? Storage::disk('public')->url($employee->nic_front)
+            : null;
+
+        $employee->nic_back_url = $employee->nic_back
+            ? Storage::disk('public')->url($employee->nic_back)
+            : null;
+
+        return $employee;
+    }
     public function index()
 {
     try {
@@ -17,6 +32,8 @@ class EmployeeController extends Controller
         if($user && $user->role === 'admin') {
 
             $employees = Employee::with('department')->get();
+
+            $employees->transform(fn($emp) => $this->formatEmployee($emp));
 
             return response()->json([
                 'success' => true,
@@ -46,19 +63,41 @@ class EmployeeController extends Controller
         try {
             if(auth()->user()->role === 'admin') {
                 $data = $request->validate([
+                    'employee_code'=>'nullable|string',
                     'first_name' => 'required|string|max:255',
                     'last_name' => 'required|string|max:255',
                     'email' => 'required|email|unique:users,email',
-                    'phone' => 'nullable|string|max:20',
+                    'phone_num1' => 'nullable|string|max:20',
+                    'phone_num2' => 'nullable|string|max:20',
+                    'nic_num' => 'nullable|string|max:20',
+                    'nic_front' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                    'nic_back' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                     'hire_date' => 'nullable|date',
                     'position' => 'nullable|string|max:255',
                     'salary' => 'nullable|numeric',
                     'address' => 'nullable|string',
                     'date_of_birth' => 'nullable|date',
-                    'department_id' => 'required|exists:departments,department_id',
-                    'is_active' => 'boolean',
-                    'password' => 'required|string|min:6',
+                    'department_id' => 'nullable|exists:departments,department_id',
+                    'is_active' => 'nullable|in:0,1',
+                    'password' => 'nullable|string|min:6',
                 ]);
+
+
+                if ($request->hasFile('nic_front')) {
+                    $file = $request->file('nic_front');
+                    $filename = 'EF-' . time() . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path('assets/img/emp/nic/front'), $filename);
+                    $data['nic_front'] = 'assets/img/emp/nic/front/' . $filename;
+                }
+
+                // NIC Back
+                if ($request->hasFile('nic_back')) {
+                    $file = $request->file('nic_back');
+                    $filename = 'EB-' . time() . '.' . $file->getClientOriginalExtension();
+                    $file->move(public_path('assets/img/emp/nic/back'), $filename);
+                    $data['nic_back'] = 'assets/img/emp/nic/back/' . $filename;
+                }
+
 
                 $user = User::create([
                     'name'  => $data['first_name'] . ' ' . $data['last_name'],
@@ -117,16 +156,33 @@ class EmployeeController extends Controller
             $data = $request->validate([
                 'first_name' => 'nullable|string|max:255',
                 'last_name' => 'nullable|string|max:255',
-                'phone' => 'nullable|string|max:20',
+                'phone_num1' => 'nullable|string|max:20',
+                'phone_num2' => 'nullable|string|max:20',
+                'nic_num' => 'nullable|string|max:20',
+                'nic_front' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'nic_back' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'hire_date' => 'nullable|date',
                 'position' => 'nullable|string|max:255',
                 'salary' => 'nullable|numeric',
                 'address' => 'nullable|string',
                 'date_of_birth' => 'nullable|date',
                 'department_id' => 'nullable|exists:departments,department_id',
-                'manager_id' => 'nullable|exists:employees,employee_id',
-                'is_active' => 'boolean',
+                'is_active' => 'nullable|in:0,1',
             ]);
+
+            if ($request->hasFile('nic_front')) {
+                if ($employee->nic_front) Storage::disk('public')->delete($employee->nic_front);
+                $data['nic_front'] = $request->file('nic_front')->store('nic_images', 'public');
+            } else {
+                unset($data['nic_front']);
+            }
+
+            if ($request->hasFile('nic_back')) {
+                if ($employee->nic_back) Storage::disk('public')->delete($employee->nic_back);
+                $data['nic_back'] = $request->file('nic_back')->store('nic_images', 'public');
+            } else {
+                unset($data['nic_back']);
+            }
 
             $employee->update($data);
 
@@ -180,4 +236,33 @@ class EmployeeController extends Controller
             ], 500);
         }
     }
+    public function import(Request $request)
+    {
+        $employees = $request->input('employees', []);
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach ($employees as $data) {
+
+            $exists = Employee::where('employee_code', $data['employee_code'])
+                ->orWhere('employee_name', $data['employee_name'])
+                ->exists();
+
+            if ($exists) {
+                $skipped++;
+                continue;
+            }
+
+            Brand::create($data);
+            $imported++;
+        }
+
+        return response()->json([
+            'imported' => $imported,
+            'skipped' => $skipped,
+            'message' => "Imported $imported employee, skipped $skipped duplicates"
+        ]);
+    }
+
 }
