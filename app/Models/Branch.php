@@ -13,9 +13,11 @@ class Branch extends Model
     protected $keyType = 'int';
     use HasFactory;
     protected $fillable = [
+        'branch_code',
         'branch_name',
         'address',
-        'phone',
+        'phone_num1',
+        'phone_num2',
         'email',
         'manager_id',
         'opening_date',

@@ -41,12 +41,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('products', ProductController::class);
     Route::apiResource('categories', CategoryController::class);
+    Route::post('/categories/import', [CategoryController::class, 'import']);
     Route::apiResource('suppliers', SupplierController::class);
     Route::post('/suppliers/import', [SupplierController::class, 'import']);
     Route::apiResource('departments', DepartmentController::class);
     Route::apiResource('brands', BrandController::class);
     Route::post('/brands/import', [BrandController::class, 'import']);
     Route::apiResource('branches', BranchController::class);
+    Route::post('/branches/import', [BranchController::class, 'import']);
     Route::apiResource('employees', EmployeeController::class);
     Route::post('/employees/import', [EmployeeController::class, 'import']);
     Route::apiResource('stocks', StockController::class);
