@@ -15,13 +15,21 @@ class EmployeeController extends Controller
 {
     private function formatEmployee($employee)
     {
-        $employee->nic_front_url = $employee->nic_front
-            ? Storage::disk('public')->url($employee->nic_front)
-            : null;
+        if ($employee->nic_front && str_starts_with($employee->nic_front, 'assets/')) {
+            $employee->nic_front_url = asset($employee->nic_front);
+        } else {
+            $employee->nic_front_url = $employee->nic_front
+                ? Storage::disk('public')->url($employee->nic_front)
+                : null;
+        }
 
-        $employee->nic_back_url = $employee->nic_back
-            ? Storage::disk('public')->url($employee->nic_back)
-            : null;
+        if ($employee->nic_back && str_starts_with($employee->nic_back, 'assets/')) {
+            $employee->nic_back_url = asset($employee->nic_back);
+        } else {
+            $employee->nic_back_url = $employee->nic_back
+                ? Storage::disk('public')->url($employee->nic_back)
+                : null;
+        }
 
         return $employee;
     }
@@ -135,7 +143,7 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $employee = Employee::find($id);
+            $employee = Employee::with('department')->find($id);
 
             if (!$employee) {
                 return response()->json([
@@ -171,15 +179,27 @@ class EmployeeController extends Controller
             ]);
 
             if ($request->hasFile('nic_front')) {
-                if ($employee->nic_front) Storage::disk('public')->delete($employee->nic_front);
-                $data['nic_front'] = $request->file('nic_front')->store('nic_images', 'public');
+                if ($employee->nic_front && file_exists(public_path($employee->nic_front))) {
+                    @unlink(public_path($employee->nic_front));
+                }
+
+                $file = $request->file('nic_front');
+                $filename = 'EF-' . time() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('assets/img/emp/nic/front'), $filename);
+                $data['nic_front'] = 'assets/img/emp/nic/front/' . $filename;
             } else {
                 unset($data['nic_front']);
             }
 
             if ($request->hasFile('nic_back')) {
-                if ($employee->nic_back) Storage::disk('public')->delete($employee->nic_back);
-                $data['nic_back'] = $request->file('nic_back')->store('nic_images', 'public');
+                if ($employee->nic_back && file_exists(public_path($employee->nic_back))) {
+                    @unlink(public_path($employee->nic_back));
+                }
+
+                $file = $request->file('nic_back');
+                $filename = 'EB-' . time() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('assets/img/emp/nic/back'), $filename);
+                $data['nic_back'] = 'assets/img/emp/nic/back/' . $filename;
             } else {
                 unset($data['nic_back']);
             }
@@ -189,7 +209,7 @@ class EmployeeController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Employee updated successfully',
-                'data' => $employee
+                'data' => $this->formatEmployee($employee)
             ], 200);
         } catch (Exception $e) {
             return response()->json([

@@ -41,9 +41,10 @@ class BrandController extends Controller
     public function store(Request $request)
     {
         try {
-            if (auth()->user()->role === 'admin' || auth()->user()->role === 'brand') {
+            $user = auth()->user();
+            if ($user->role === 'admin') {
                 $data = $request->validate([
-                    'brand_code' => 'nullable|string',
+                    'brand_code' => 'nullable|string|unique:brands,brand_code',
                     'brand_name' => 'required|string|max:255',
                     'contact_person' => 'nullable|string|max:255',
                     'phone' => 'nullable|string|max:20',
@@ -62,16 +63,23 @@ class BrandController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized',
+                    'message' => 'Unauthorized. Only admins can create brands.',
                     'data' => null,
                 ], 403);
             }
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create brand',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }
@@ -79,7 +87,8 @@ class BrandController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            if (auth()->user()->role === 'admin') {
+            $user = auth()->user();
+            if ($user->role === 'admin') {
                 $brand = Brand::find($id);
 
                 if (!$brand) {
@@ -91,7 +100,7 @@ class BrandController extends Controller
                 }
 
                 $data = $request->validate([
-                    'brand_code' => 'nullable|string',
+                    'brand_code' => 'nullable|string|unique:brands,brand_code,' . $id . ',brand_id',
                     'brand_name' => 'nullable|string|max:255',
                     'contact_person' => 'nullable|string|max:255',
                     'phone' => 'nullable|string|max:20',
@@ -110,16 +119,23 @@ class BrandController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized',
+                    'message' => 'Unauthorized. Only admins can update brands.',
                     'data' => null,
                 ], 403);
             }
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update brand',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }
@@ -127,7 +143,8 @@ class BrandController extends Controller
     public function destroy($id)
     {
         try {
-            if (auth()->user()->role === 'admin') {
+            $user = auth()->user();
+            if ($user->role === 'admin') {
                 $brand = Brand::find($id);
 
                 if (!$brand) {
@@ -148,7 +165,7 @@ class BrandController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized',
+                    'message' => 'Unauthorized. Only admins can delete brands.',
                     'data' => null,
                 ], 403);
             }
@@ -157,7 +174,8 @@ class BrandController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete brand',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
     }

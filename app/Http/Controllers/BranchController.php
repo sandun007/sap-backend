@@ -8,12 +8,11 @@ use Exception;
 
 class BranchController extends Controller
 {
-    //retrieve all branches
     public function index()
     {
         try {
             if(auth()->user()->role === 'admin' || auth()->user()->role === 'employee') {
-                $branches = Branch::all();
+                $branches = Branch::with('manager')->get();
 
                 return response()->json([
                     'success' => true,
@@ -41,7 +40,6 @@ class BranchController extends Controller
     {
         try {
             if(auth()->user()->role === 'admin') {
-                // Check for existing branch name
                 if ($request->filled('branch_name') && Branch::where('branch_name', $request->input('branch_name'))->exists()) {
                     return response()->json([
                         'success' => false,
@@ -50,7 +48,6 @@ class BranchController extends Controller
                     ], 409);
                 }
 
-                // Check for existing email
                 if ($request->filled('email') && Branch::where('email', $request->input('email'))->exists()) {
                     return response()->json([
                         'success' => false,

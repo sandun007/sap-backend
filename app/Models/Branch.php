@@ -23,4 +23,9 @@ class Branch extends Model
         'opening_date',
         'is_active',
     ];
+
+    public function manager()
+    {
+        return $this->belongsTo(Employee::class, 'manager_id', 'employee_id');
+    }
 }
