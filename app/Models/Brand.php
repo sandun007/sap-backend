@@ -1,18 +1,19 @@
 <?php
 
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Brand extends Model
 {
-
-    protected $primaryKey = 'brand_id';
-    
     use HasFactory;
-    
+    protected $primaryKey = 'brand_id';
+
     protected $fillable = [
+
+        'brand_code',
         'brand_name',
         'contact_person',
         'phone',
@@ -20,4 +21,12 @@ class Brand extends Model
         'website',
         'created_date',
     ];
-}
+
+    protected $casts = [
+
+        'created_date' => 'date',
+    ];
+
+
+    }
+

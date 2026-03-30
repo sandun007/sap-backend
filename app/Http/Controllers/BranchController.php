@@ -8,12 +8,11 @@ use Exception;
 
 class BranchController extends Controller
 {
-    //retrieve all branches
     public function index()
     {
         try {
             if(auth()->user()->role === 'admin' || auth()->user()->role === 'employee') {
-                $branches = Branch::all();
+                $branches = Branch::with('manager')->get();
 
                 return response()->json([
                     'success' => true,
@@ -41,7 +40,6 @@ class BranchController extends Controller
     {
         try {
             if(auth()->user()->role === 'admin') {
-                // Check for existing branch name
                 if ($request->filled('branch_name') && Branch::where('branch_name', $request->input('branch_name'))->exists()) {
                     return response()->json([
                         'success' => false,
@@ -49,8 +47,7 @@ class BranchController extends Controller
                         'data' => null
                     ], 409);
                 }
-                
-                // Check for existing email
+
                 if ($request->filled('email') && Branch::where('email', $request->input('email'))->exists()) {
                     return response()->json([
                         'success' => false,
@@ -60,11 +57,13 @@ class BranchController extends Controller
                 }
 
                 $data = $request->validate([
+                    'branch_code' => 'nullable|string',
                     'branch_name' => 'required|string|max:255',
                     'address' => 'nullable|string',
-                    'phone' => 'nullable|string|max:20',
+                    'phone_num1' => 'nullable|string|max:20',
+                    'phone_num2' => 'nullable|string|max:20',
                     'email' => 'nullable|email|unique:branches,email',
-                    'manager_id' => 'nullable|exists:employees,employee_id',
+                    'manager_id' => 'nullable|string',
                     'opening_date' => 'nullable|date',
                     'is_active' => 'boolean',
                 ]);
@@ -98,7 +97,7 @@ class BranchController extends Controller
         try {
             if(auth()->user()->role === 'admin') {
                 $branch = Branch::where('branch_id', $id)->first();
-                
+
                 if (!$branch) {
                     return response()->json([
                         'success' => false,
@@ -108,9 +107,11 @@ class BranchController extends Controller
                 }
 
                 $data = $request->validate([
+                    'branch_code' => 'nullable|string',
                     'branch_name' => 'nullable|string|max:255',
                     'address' => 'nullable|string',
-                    'phone' => 'nullable|string|max:20',
+                    'phone_num1' => 'nullable|string|max:20',
+                    'phone_num2' => 'nullable|string|max:20',
                     'email' => 'nullable|email|unique:branches,email,' . $id . ',branch_id',
                     'manager_id' => 'nullable|exists:employees,employee_id',
                     'opening_date' => 'nullable|date',
@@ -177,4 +178,34 @@ class BranchController extends Controller
             ], 500);
         }
     }
+    public function import(Request $request)
+    {
+        $branches = $request->input('branches', []);
+
+        $imported = 0;
+        $skipped = 0;
+
+        foreach ($branches as $data) {
+
+            $exists = Branch::where('branch_name', $data['branch_name'])
+                ->orWhere('email', $data['email'])
+                ->exists();
+
+            if ($exists) {
+                $skipped++;
+                continue;
+            }
+
+            Branch::create($data);
+            $imported++;
+        }
+
+        return response()->json([
+            'imported' => $imported,
+            'skipped' => $skipped,
+            'message' => "Imported $imported branch, skipped $skipped duplicates"
+        ]);
+    }
+
 }
+
