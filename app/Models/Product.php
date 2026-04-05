@@ -13,6 +13,7 @@ class Product extends Model
 
     protected $fillable = [
         'product_name',
+        'product_code',
         'brand_id',
         'subcategory_id',
         'price',
@@ -20,6 +21,11 @@ class Product extends Model
         'status',
         'description',
         'user_id',
+        'barcode',
+        'cost_price',
+        'weight',
+        'dimensions',
+        'supplier_id',
     ];
 
     public function brand()
@@ -35,5 +41,10 @@ class Product extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function stocks()
+    {
+        return $this->hasMany(Stock::class, 'product_id', 'product_id');
     }
 }

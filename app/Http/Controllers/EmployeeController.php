@@ -34,36 +34,36 @@ class EmployeeController extends Controller
         return $employee;
     }
     public function index()
-{
-    try {
-        $user = auth()->user();
-        if($user && $user->role === 'admin') {
+    {
+        try {
+            $user = auth()->user();
+            if($user && $user->role === 'admin') {
 
-            $employees = Employee::with('department')->get();
+                $employees = Employee::with('department')->get();
 
-            $employees->transform(fn($emp) => $this->formatEmployee($emp));
+                $employees->transform(fn($emp) => $this->formatEmployee($emp));
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Employees retrieved successfully',
-                'data' => $employees
-            ], 200);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Employees retrieved successfully',
+                    'data' => $employees
+                ], 200);
 
-        } else {
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                    'data' => null
+                ], 403);
+            }
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthorized',
-                'data' => null
-            ], 403);
+                'message' => 'Failed to retrieve employees',
+                'error' => $e->getMessage()
+            ], 500);
         }
-    } catch (Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to retrieve employees',
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
 
 
     public function store(Request $request)

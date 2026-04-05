@@ -11,6 +11,7 @@ class Customer extends Model
 
     protected $primaryKey = 'customer_id'; // your table uses customer_id
     protected $fillable = [
+        'customer_code',
         'first_name',
         'last_name',
         'company_name',

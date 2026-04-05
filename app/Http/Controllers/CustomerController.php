@@ -65,6 +65,7 @@ class CustomerController extends Controller
             ];
 
             $validated = $request->validate([
+                'customer_code' => 'nullable|string|max:50',
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'company_name' => 'nullable|string|max:255',
@@ -130,6 +131,7 @@ class CustomerController extends Controller
             }
 
             $data = $request->validate([
+                'customer_code' => 'nullable|string|max:50',
                 'first_name' => 'nullable|string|max:255',
                 'last_name' => 'nullable|string|max:255',
                 'company_name' => 'nullable|string|max:255',

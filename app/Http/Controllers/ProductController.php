@@ -12,7 +12,7 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::with(['brand', 'subcategory','user'])->get();
+            $products = Product::with(['brand', 'subcategory.category','user', 'stocks'])->get();
             
             return response()->json([
                 'success' => true,
@@ -36,12 +36,18 @@ class ProductController extends Controller
         
         $data = $request->validate([
             'product_name' => 'required|string|max:255',
+            'product_code' => 'required|string|max:255|unique:products,product_code',
             'brand_id' => 'required|exists:brands,brand_id',
             'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
             'price' => 'required|numeric',
             'unit' => 'required|string|max:50',
             'status' => 'nullable|string',
             'description' => 'nullable|string',
+            'barcode' => 'nullable|string|max:255',
+            'cost_price' => 'nullable|numeric',
+            'weight' => 'nullable|string|max:255',
+            'dimensions' => 'nullable|string|max:255',
+            'supplier_id' => 'nullable|exists:suppliers,supplier_id',
         ]);
 
         $data['user_id'] = $userid;
@@ -108,12 +114,18 @@ class ProductController extends Controller
 
             $data = $request->validate([
                 'product_name' => 'nullable|string|max:255',
+                'product_code' => 'nullable|string|max:255|unique:products,product_code,' . $product->product_id . ',product_id',
                 'brand_id' => 'nullable|exists:brands,brand_id',
                 'subcategory_id' => 'nullable|exists:sub_categories,subcategory_id',
                 'price' => 'nullable|numeric',
                 'unit' => 'nullable|string|max:50',
                 'status' => 'nullable|string',
                 'description' => 'nullable|string',
+                'barcode' => 'nullable|string|max:255',
+                'cost_price' => 'nullable|numeric',
+                'weight' => 'nullable|string|max:255',
+                'dimensions' => 'nullable|string|max:255',
+                'supplier_id' => 'nullable|exists:suppliers,supplier_id',
             ]);
 
             $product->update($data);

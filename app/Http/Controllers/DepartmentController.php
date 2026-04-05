@@ -32,6 +32,7 @@ class DepartmentController extends Controller
         try {
             if(auth()->user()->role === 'admin') {
             $data = $request->validate([
+                'department_code' => 'nullable|string|max:50',
                 'department_name' => 'required|string|max:255',
                 'description' => 'nullable|string',
                 'manager_id' => 'nullable|exists:employees,employee_id',
@@ -78,6 +79,7 @@ class DepartmentController extends Controller
             }
 
             $data = $request->validate([
+                'department_code' => 'nullable|string|max:50',
                 'department_name' => 'nullable|string|max:255',
                 'description' => 'nullable|string',
                 'manager_id' => 'nullable|exists:employees,employee_id',
