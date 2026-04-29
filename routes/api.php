@@ -52,6 +52,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('branches', BranchController::class);
     Route::post('/branches/import', [BranchController::class, 'import']);
     Route::apiResource('employees', EmployeeController::class);
+    
+    Route::post('/departments/import', [DepartmentController::class, 'import']);
     Route::post('/employees/import', [EmployeeController::class, 'import']);
     Route::apiResource('stocks', StockController::class);
     Route::apiResource('subcategories', SubCategoryController::class);

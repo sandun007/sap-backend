@@ -146,4 +146,63 @@ class DepartmentController extends Controller
             ], 500);
         }
     }
+
+    public function import(Request $request)
+{
+    try {
+        $departments = $request->input('departments');
+        
+        if (!$departments || !is_array($departments)) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Invalid data format'
+            ], 400);
+        }
+        
+        $imported = 0;
+        $errors = [];
+        
+        foreach ($departments as $index => $dept) {
+            // Check if branch exists
+            $branchExists = \App\Models\Branch::where('branch_id', $dept['branch_id'])->exists();
+            
+            // Check if manager exists (if provided)
+            $managerExists = true;
+            if (!empty($dept['manager_id'])) {
+                $managerExists = \App\Models\Employee::where('employee_id', $dept['manager_id'])->exists();
+            }
+            
+            if ($branchExists && $managerExists) {
+                Department::create([
+                    'department_name' => $dept['department_name'],
+                    'description' => $dept['description'] ?? '',
+                    'branch_id' => $dept['branch_id'],
+                    'manager_id' => !empty($dept['manager_id']) ? $dept['manager_id'] : null,
+                    'is_active' => isset($dept['status']) && strtolower($dept['status']) === 'active' ? 1 : 0,
+                ]);
+                $imported++;
+            } else {
+                $errors[] = "Row " . ($index + 2) . ": " . 
+                           (!$branchExists ? "Branch ID '{$dept['branch_id']}' not found. " : "") .
+                           (!$managerExists ? "Manager ID '{$dept['manager_id']}' not found." : "");
+            }
+        }
+        
+        $message = $imported > 0 ? "Successfully imported $imported departments" : "No departments were imported";
+        
+        return response()->json([
+            'success' => true,
+            'imported' => $imported,
+            'errors' => $errors,
+            'message' => $message
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Import Error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Import failed: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }
