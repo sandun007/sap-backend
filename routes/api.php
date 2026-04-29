@@ -15,7 +15,7 @@ use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
-
+use App\Http\Controllers\StoreController;
 
 
 
@@ -54,6 +54,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('stocks', StockController::class);
     Route::apiResource('subcategories', SubCategoryController::class);
     Route::apiResource('orders', OrderController::class);
+    Route::apiResource('stores', StoreController::class);
 
     // Stock Inventory Operations
     Route::post('stocks/{id}/add', [StockController::class, 'addStock']);
