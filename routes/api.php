@@ -15,6 +15,8 @@ use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\StoreController;
+use App\Http\Controllers\BankController;
 
 
 
@@ -50,10 +52,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('branches', BranchController::class);
     Route::post('/branches/import', [BranchController::class, 'import']);
     Route::apiResource('employees', EmployeeController::class);
+    
+    Route::post('/departments/import', [DepartmentController::class, 'import']);
     Route::post('/employees/import', [EmployeeController::class, 'import']);
     Route::apiResource('stocks', StockController::class);
     Route::apiResource('subcategories', SubCategoryController::class);
     Route::apiResource('orders', OrderController::class);
+    Route::apiResource('stores', StoreController::class);
+        Route::apiResource('banks', BankController::class);
+
 
     // Stock Inventory Operations
     Route::post('stocks/{id}/add', [StockController::class, 'addStock']);
