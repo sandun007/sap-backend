@@ -22,6 +22,8 @@ class BankController extends Controller
             'branch_name'=>'required',
             'account_number'=>'required',
             'account_holder_name'=>'required',
+            'amount' => 'required|numeric|min:0'
+
         ]);
 
         $bank = Bank::create($request->all());

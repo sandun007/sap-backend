@@ -14,6 +14,7 @@ class Bank extends Model
         'branch_name',
         'account_number',
         'account_holder_name',
-        'created_date'
+        'created_date',
+        'amount'
     ];
 }
