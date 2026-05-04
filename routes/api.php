@@ -17,6 +17,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\BankController;
+use App\Http\Controllers\PurchaseController;
+
 
 
 
@@ -53,13 +55,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/branches/import', [BranchController::class, 'import']);
     Route::apiResource('employees', EmployeeController::class);
     
-    Route::post('/departments/import', [DepartmentController::class, 'import']);
-    Route::post('/employees/import', [EmployeeController::class, 'import']);
     Route::apiResource('stocks', StockController::class);
     Route::apiResource('subcategories', SubCategoryController::class);
     Route::apiResource('orders', OrderController::class);
     Route::apiResource('stores', StoreController::class);
         Route::apiResource('banks', BankController::class);
+        Route::apiResource('purchases', PurchaseController::class);
+        Route::get('purchases/product/{product_id}', [PurchaseController::class, 'getProductHistory']);
+
+
 
 
     // Stock Inventory Operations
