@@ -18,6 +18,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\SettingController;
 
 
 
@@ -63,6 +64,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('purchases', PurchaseController::class);
         Route::get('purchases/product/{product_id}', [PurchaseController::class, 'getProductHistory']);
 
+        // Settings Routes
+        Route::get('/settings', [SettingController::class, 'index']);
+        Route::post('/settings', [SettingController::class, 'update']);
+
 
 
 
@@ -81,6 +86,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Optional: Additional stock-related routes
     Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']);
     Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']);
+    Route::post('stocks/transfer', [StockController::class, 'transferStock']);
 
 });
 

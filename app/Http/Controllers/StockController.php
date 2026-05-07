@@ -475,6 +475,120 @@ class StockController extends Controller
     }
 }
 
+    /**
+     * Transfer stock between branches
+     */
+    public function transferStock(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'product_id' => 'required|exists:products,product_id',
+                'from_branch_id' => 'required|exists:branches,branch_id',
+                'to_branch_id' => 'required|exists:branches,branch_id|different:from_branch_id',
+                'quantity' => 'required|integer|min:1',
+                'notes' => 'nullable|string',
+                'reference_number' => 'nullable|string'
+            ]);
+
+            DB::beginTransaction();
+
+            // 1. Get Source Stock
+            $sourceStock = Stock::where('product_id', $data['product_id'])
+                               ->where('branch_id', $data['from_branch_id'])
+                               ->first();
+
+            if (!$sourceStock || $sourceStock->quantity < $data['quantity']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient stock in source branch.'
+                ], 400);
+            }
+
+            // 2. Get or Create Destination Stock
+            $destStock = Stock::where('product_id', $data['product_id'])
+                             ->where('branch_id', $data['to_branch_id'])
+                             ->first();
+
+            if (!$destStock) {
+                // Create stock record for destination branch if it doesn't exist
+                $destStock = Stock::create([
+                    'product_id' => $sourceStock->product_id,
+                    'branch_id' => $data['to_branch_id'],
+                    'brand_id' => $sourceStock->brand_id,
+                    'category_id' => $sourceStock->category_id,
+                    'subcategory_id' => $sourceStock->subcategory_id,
+                    'product_name' => $sourceStock->product_name,
+                    'quantity' => 0,
+                    'minimum_stock_level' => $sourceStock->minimum_stock_level ?? 10,
+                ]);
+            }
+
+            // 3. Perform the movement
+            $sourceQtyBefore = $sourceStock->quantity;
+            $sourceStock->quantity -= $data['quantity'];
+            $sourceStock->save();
+
+            $destQtyBefore = $destStock->quantity;
+            $destStock->quantity += $data['quantity'];
+            $destStock->last_restocked_date = now();
+            $destStock->save();
+
+            // 4. Record Transactions (Simple way using existing types)
+            // Source (OUT)
+            StockTransaction::create([
+                'stock_id' => $sourceStock->stock_id,
+                'product_id' => $sourceStock->product_id,
+                'branch_id' => $sourceStock->branch_id,
+                'brand_id' => $sourceStock->brand_id,
+                'category_id' => $sourceStock->category_id,
+                'subcategory_id' => $sourceStock->subcategory_id,
+                'product_name' => $sourceStock->product_name,
+                'transaction_type' => 'out',
+                'quantity_before' => $sourceQtyBefore,
+                'quantity_changed' => -$data['quantity'],
+                'quantity_after' => $sourceStock->quantity,
+                'reference_number' => $data['reference_number'] ?? null,
+                'notes' => "STOCK TRANSFER: Sent to Branch ID {$data['to_branch_id']}. " . ($data['notes'] ?? ''),
+                'created_by' => auth()->id(),
+            ]);
+
+            // Destination (IN)
+            StockTransaction::create([
+                'stock_id' => $destStock->stock_id,
+                'product_id' => $destStock->product_id,
+                'branch_id' => $destStock->branch_id,
+                'brand_id' => $destStock->brand_id,
+                'category_id' => $destStock->category_id,
+                'subcategory_id' => $destStock->subcategory_id,
+                'product_name' => $destStock->product_name,
+                'transaction_type' => 'in',
+                'quantity_before' => $destQtyBefore,
+                'quantity_changed' => $data['quantity'],
+                'quantity_after' => $destStock->quantity,
+                'reference_number' => $data['reference_number'] ?? null,
+                'notes' => "STOCK TRANSFER: Received from Branch ID {$data['from_branch_id']}. " . ($data['notes'] ?? ''),
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stock transferred successfully.',
+                'data' => [
+                    'source_stock' => $sourceStock,
+                    'destination_stock' => $destStock
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Transfer failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     // ========== STOCK TRANSACTION HISTORY METHODS ==========
 
