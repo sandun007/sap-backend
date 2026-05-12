@@ -160,6 +160,8 @@ class PurchaseController extends Controller
             ]);
         }
 
+        $supplier = \App\Models\Supplier::find($purchase->supplier_id);
+
         // Record Stock Transaction
         StockTransaction::create([
             'stock_id' => $stock->stock_id,
@@ -173,7 +175,8 @@ class PurchaseController extends Controller
             'quantity_before' => $quantityBefore,
             'quantity_changed' => $itemData['quantity'],
             'quantity_after' => $stock->quantity,
-            'notes' => "Purchased via GRN: {$purchase->purchase_id}",
+            'reference_number' => $purchase->purchase_id,
+            'notes' => "Purchased via GRN: {$purchase->purchase_id} from Supplier [{$supplier->supplier_name}]",
             'created_by' => auth()->id(),
         ]);
     }
