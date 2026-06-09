@@ -88,6 +88,12 @@ Route::apiResource('invoices', InvoiceController::class);
     Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']);
     Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']);
 
+    // Dashboard Analytics
+    Route::get('dashboard/stats', [DashboardController::class, 'getStats']);
+    Route::get('dashboard/sales', [DashboardController::class, 'getSalesData']);
+    Route::get('dashboard/stock-status', [DashboardController::class, 'getStockStatus']);
+    Route::get('dashboard/recent-activity', [DashboardController::class, 'getRecentActivity']);
+
 });
 
 Route::post('/customer/create', [CustomerController::class, 'store']);
