@@ -284,78 +284,209 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 13. Seed 100 Products
+        // 13. Seed 100 Products with realistic brands and Rupee prices
         $productsData = [
-            // Electronics
-            'Smartphones' => ['iPhone 15 Pro', 'Samsung Galaxy S24', 'Google Pixel 8', 'OnePlus 12'],
-            'Laptops' => ['MacBook Air M3', 'Dell XPS 13', 'HP Spectre x360', 'Lenovo ThinkPad X1'],
-            'Audio' => ['Sony WH-1000XM5', 'Bose QuietComfort Ultra', 'Apple AirPods Pro', 'Sennheiser Momentum 4'],
-            'Accessories' => ['Anker PowerCore 24K', 'Logitech MX Master 3S', 'Apple Magic Keyboard', 'Samsung T7 Shield SSD'],
-            'Smart Home' => ['Amazon Echo Dot', 'Google Nest Hub', 'Philips Hue Starter Kit', 'Ring Video Doorbell'],
+            // Smartphones
+            ['name' => 'iPhone 15 Pro', 'subcategory' => 'Smartphones', 'brand' => 'Apple', 'cost' => 280000.00, 'price' => 350000.00],
+            ['name' => 'Samsung Galaxy S24', 'subcategory' => 'Smartphones', 'brand' => 'Samsung', 'cost' => 240000.00, 'price' => 310000.00],
+            ['name' => 'Google Pixel 8', 'subcategory' => 'Smartphones', 'brand' => 'Google', 'cost' => 180000.00, 'price' => 230000.00],
+            ['name' => 'OnePlus 12', 'subcategory' => 'Smartphones', 'brand' => 'OnePlus', 'cost' => 190000.00, 'price' => 240000.00],
 
-            // Apparel
-            'T-Shirts' => ['Nike Dri-FIT Tee', 'Adidas Originals Tee', 'Puma Classic Tee', 'Under Armour Sport Tee'],
-            'Jeans' => ['Levis 501 Original', 'Wrangler Authentic Jeans', 'Lee Rider Slim Jeans', 'Diesel D-Strukt Jeans'],
-            'Jackets' => ['Patagonia Torrentshell', 'The North Face Resolve', 'Columbia Watertight', 'Arc`teryx Beta LT'],
-            'Socks' => ['Darn Tough Cushion', 'Smartwool Run Socks', 'Nike Everyday Cushion', 'Adidas Athletic Socks'],
-            'Caps' => ['New Era 59FIFTY Cap', 'Nike Legacy91 Cap', 'Adidas Superlite Cap', 'Carhartt Beanie'],
+            // Laptops
+            ['name' => 'MacBook Air M3', 'subcategory' => 'Laptops', 'brand' => 'Apple', 'cost' => 290000.00, 'price' => 370000.00],
+            ['name' => 'Dell XPS 13', 'subcategory' => 'Laptops', 'brand' => 'Dell', 'cost' => 310000.00, 'price' => 390000.00],
+            ['name' => 'HP Spectre x360', 'subcategory' => 'Laptops', 'brand' => 'HP', 'cost' => 320000.00, 'price' => 410000.00],
+            ['name' => 'Lenovo ThinkPad X1', 'subcategory' => 'Laptops', 'brand' => 'Lenovo', 'cost' => 340000.00, 'price' => 430000.00],
 
-            // Home & Kitchen
-            'Coffee Makers' => ['Keurig K-Elite', 'Nespresso Vertuo Next', 'Breville Barista', 'Hamilton FlexBrew'],
-            'Microwaves' => ['Toshiba EM131A5C', 'Panasonic NN-SN686S', 'Black+Decker EM720', 'Samsung MS19M'],
-            'Blenders' => ['Vitamix 5200', 'Ninja Professional', 'NutriBullet Pro', 'Magic Bullet Blender'],
-            'Toasters' => ['Breville Bit More', 'Cuisinart CPT-180', 'KitchenAid 2-Slice', 'Oster 4-Slice Toaster'],
-            'Air Fryers' => ['Cosori Pro II', 'Ninja AF101', 'Instant Vortex Plus', 'Philips Essential Air'],
+            // Audio
+            ['name' => 'Sony WH-1000XM5', 'subcategory' => 'Audio', 'brand' => 'Sony', 'cost' => 85000.00, 'price' => 110000.00],
+            ['name' => 'Bose QuietComfort Ultra', 'subcategory' => 'Audio', 'brand' => 'Bose', 'cost' => 90000.00, 'price' => 120000.00],
+            ['name' => 'Apple AirPods Pro', 'subcategory' => 'Audio', 'brand' => 'Apple', 'cost' => 60000.00, 'price' => 80000.00],
+            ['name' => 'Sennheiser Momentum 4', 'subcategory' => 'Audio', 'brand' => 'Sennheiser', 'cost' => 75000.00, 'price' => 95000.00],
 
-            // Sports
-            'Footballs' => ['Wilson NFL Duke', 'Adidas Al Rihla', 'Nike Strike Ball', 'Spalding TF-1000 Ball'],
-            'Dumbbells' => ['Bowflex SelectTech', 'CAP Cast Iron Dumbbell', 'Amazon Basics Neoprene', 'Rogue Rubber Hex'],
-            'Yoga Mats' => ['Lululemon 5mm Mat', 'Manduka PRO Mat', 'Gaiam Essentials Mat', 'Jade Harmony Mat'],
-            'Water Bottles' => ['Hydro Flask 32oz', 'Yeti Rambler 26oz', 'CamelBak Chute Mag', 'Nalgene Wide Mouth'],
-            'Running Shoes' => ['Nike Air Zoom Pegasus', 'Adidas Ultraboost', 'Brooks Ghost 15', 'Asics Gel-Kayano 30'],
+            // Accessories
+            ['name' => 'Anker PowerCore 24K', 'subcategory' => 'Accessories', 'brand' => 'Anker', 'cost' => 15000.00, 'price' => 20000.00],
+            ['name' => 'Logitech MX Master 3S', 'subcategory' => 'Accessories', 'brand' => 'Logitech', 'cost' => 25000.00, 'price' => 32000.00],
+            ['name' => 'Apple Magic Keyboard', 'subcategory' => 'Accessories', 'brand' => 'Apple', 'cost' => 30000.00, 'price' => 40000.00],
+            ['name' => 'Samsung T7 Shield SSD', 'subcategory' => 'Accessories', 'brand' => 'Samsung', 'cost' => 35000.00, 'price' => 45000.00],
 
-            // Office Supplies
-            'Notebooks' => ['Moleskine Classic', 'Rhodia Webnotebook', 'Leuchtturm1917 Medium', 'Field Notes 3-Pack'],
-            'Pens' => ['Pilot G2 Gel Pens', 'Uni-ball Onyx Pens', 'Parker Jotter Classic', 'Sharpie S-Gel Pens'],
-            'Desk Organizers' => ['Mesh Desk Organizer', 'Wooden Desk Caddy', 'Leather Desk Pad', 'Monitor Stand Riser'],
-            'Staplers' => ['Swingline 747 Classic', 'Bostitch Office Staple', 'PaperPro InSpire', 'Rapid Supreme Press'],
-            'Paper Shredders' => ['Fellowes Powershred', 'Amazon Basics Shredder', 'Aurora AU800SD', 'Royal Sovereign Shred'],
+            // Smart Home
+            ['name' => 'Amazon Echo Dot', 'subcategory' => 'Smart Home', 'brand' => 'Amazon', 'cost' => 12000.00, 'price' => 16000.00],
+            ['name' => 'Google Nest Hub', 'subcategory' => 'Smart Home', 'brand' => 'Google', 'cost' => 25000.00, 'price' => 32000.00],
+            ['name' => 'Philips Hue Starter Kit', 'subcategory' => 'Smart Home', 'brand' => 'Philips', 'cost' => 35000.00, 'price' => 45000.00],
+            ['name' => 'Ring Video Doorbell', 'subcategory' => 'Smart Home', 'brand' => 'Ring', 'cost' => 45000.00, 'price' => 60000.00],
+
+            // T-Shirts
+            ['name' => 'Nike Dri-FIT Tee', 'subcategory' => 'T-Shirts', 'brand' => 'Nike', 'cost' => 4500.00, 'price' => 6000.00],
+            ['name' => 'Adidas Originals Tee', 'subcategory' => 'T-Shirts', 'brand' => 'Adidas', 'cost' => 5000.00, 'price' => 6500.00],
+            ['name' => 'Puma Classic Tee', 'subcategory' => 'T-Shirts', 'brand' => 'Puma', 'cost' => 3800.00, 'price' => 5000.00],
+            ['name' => 'Under Armour Sport Tee', 'subcategory' => 'T-Shirts', 'brand' => 'Under Armour', 'cost' => 4200.00, 'price' => 5500.00],
+
+            // Jeans
+            ['name' => 'Levis 501 Original', 'subcategory' => 'Jeans', 'brand' => 'Levi\'s', 'cost' => 12000.00, 'price' => 16500.00],
+            ['name' => 'Wrangler Authentic Jeans', 'subcategory' => 'Jeans', 'brand' => 'Wrangler', 'cost' => 8500.00, 'price' => 11500.00],
+            ['name' => 'Lee Rider Slim Jeans', 'subcategory' => 'Jeans', 'brand' => 'Lee', 'cost' => 9000.00, 'price' => 12500.00],
+            ['name' => 'Diesel D-Strukt Jeans', 'subcategory' => 'Jeans', 'brand' => 'Diesel', 'cost' => 25000.00, 'price' => 35000.00],
+
+            // Jackets
+            ['name' => 'Patagonia Torrentshell', 'subcategory' => 'Jackets', 'brand' => 'Patagonia', 'cost' => 35000.00, 'price' => 48000.00],
+            ['name' => 'The North Face Resolve', 'subcategory' => 'Jackets', 'brand' => 'The North Face', 'cost' => 28000.00, 'price' => 38000.00],
+            ['name' => 'Columbia Watertight', 'subcategory' => 'Jackets', 'brand' => 'Columbia', 'cost' => 22000.00, 'price' => 30000.00],
+            ['name' => 'Arc`teryx Beta LT', 'subcategory' => 'Jackets', 'brand' => 'Arc\'teryx', 'cost' => 95000.00, 'price' => 130000.00],
+
+            // Socks
+            ['name' => 'Darn Tough Cushion', 'subcategory' => 'Socks', 'brand' => 'Darn Tough', 'cost' => 4000.00, 'price' => 5500.00],
+            ['name' => 'Smartwool Run Socks', 'subcategory' => 'Socks', 'brand' => 'Smartwool', 'cost' => 3500.00, 'price' => 4800.00],
+            ['name' => 'Nike Everyday Cushion', 'subcategory' => 'Socks', 'brand' => 'Nike', 'cost' => 2200.00, 'price' => 3000.00],
+            ['name' => 'Adidas Athletic Socks', 'subcategory' => 'Socks', 'brand' => 'Adidas', 'cost' => 2000.00, 'price' => 2800.00],
+
+            // Caps
+            ['name' => 'New Era 59FIFTY Cap', 'subcategory' => 'Caps', 'brand' => 'New Era', 'cost' => 6500.00, 'price' => 9000.00],
+            ['name' => 'Nike Legacy91 Cap', 'subcategory' => 'Caps', 'brand' => 'Nike', 'cost' => 4500.00, 'price' => 6000.00],
+            ['name' => 'Adidas Superlite Cap', 'subcategory' => 'Caps', 'brand' => 'Adidas', 'cost' => 3800.00, 'price' => 5200.00],
+            ['name' => 'Carhartt Beanie', 'subcategory' => 'Caps', 'brand' => 'Carhartt', 'cost' => 4000.00, 'price' => 5500.00],
+
+            // Coffee Makers
+            ['name' => 'Keurig K-Elite', 'subcategory' => 'Coffee Makers', 'brand' => 'Keurig', 'cost' => 45000.00, 'price' => 60000.00],
+            ['name' => 'Nespresso Vertuo Next', 'subcategory' => 'Coffee Makers', 'brand' => 'Nespresso', 'cost' => 55000.00, 'price' => 75000.00],
+            ['name' => 'Breville Barista', 'subcategory' => 'Coffee Makers', 'brand' => 'Breville', 'cost' => 180000.00, 'price' => 240000.00],
+            ['name' => 'Hamilton FlexBrew', 'subcategory' => 'Coffee Makers', 'brand' => 'Hamilton Beach', 'cost' => 32000.00, 'price' => 44000.00],
+
+            // Microwaves
+            ['name' => 'Toshiba EM131A5C', 'subcategory' => 'Microwaves', 'brand' => 'Toshiba', 'cost' => 35000.00, 'price' => 48000.00],
+            ['name' => 'Panasonic NN-SN686S', 'subcategory' => 'Microwaves', 'brand' => 'Panasonic', 'cost' => 48000.00, 'price' => 65000.00],
+            ['name' => 'Black+Decker EM720', 'subcategory' => 'Microwaves', 'brand' => 'Black+Decker', 'cost' => 25000.00, 'price' => 34000.00],
+            ['name' => 'Samsung MS19M', 'subcategory' => 'Microwaves', 'brand' => 'Samsung', 'cost' => 42000.00, 'price' => 58000.00],
+
+            // Blenders
+            ['name' => 'Vitamix 5200', 'subcategory' => 'Blenders', 'brand' => 'Vitamix', 'cost' => 110000.00, 'price' => 150000.00],
+            ['name' => 'Ninja Professional', 'subcategory' => 'Blenders', 'brand' => 'Ninja', 'cost' => 38000.00, 'price' => 52000.00],
+            ['name' => 'NutriBullet Pro', 'subcategory' => 'Blenders', 'brand' => 'NutriBullet', 'cost' => 28000.00, 'price' => 38000.00],
+            ['name' => 'Magic Bullet Blender', 'subcategory' => 'Blenders', 'brand' => 'Magic Bullet', 'cost' => 12000.00, 'price' => 16500.00],
+
+            // Toasters
+            ['name' => 'Breville Bit More', 'subcategory' => 'Toasters', 'brand' => 'Breville', 'cost' => 22000.00, 'price' => 30000.00],
+            ['name' => 'Cuisinart CPT-180', 'subcategory' => 'Toasters', 'brand' => 'Cuisinart', 'cost' => 18000.00, 'price' => 25000.00],
+            ['name' => 'KitchenAid 2-Slice', 'subcategory' => 'Toasters', 'brand' => 'KitchenAid', 'cost' => 25000.00, 'price' => 34000.00],
+            ['name' => 'Oster 4-Slice Toaster', 'subcategory' => 'Toasters', 'brand' => 'Oster', 'cost' => 15000.00, 'price' => 20000.00],
+
+            // Air Fryers
+            ['name' => 'Cosori Pro II', 'subcategory' => 'Air Fryers', 'brand' => 'Cosori', 'cost' => 32000.00, 'price' => 44000.00],
+            ['name' => 'Ninja AF101', 'subcategory' => 'Air Fryers', 'brand' => 'Ninja', 'cost' => 38000.00, 'price' => 52000.00],
+            ['name' => 'Instant Vortex Plus', 'subcategory' => 'Air Fryers', 'brand' => 'Instant Pot', 'cost' => 42000.00, 'price' => 58000.00],
+            ['name' => 'Philips Essential Air', 'subcategory' => 'Air Fryers', 'brand' => 'Philips', 'cost' => 35000.00, 'price' => 48000.00],
+
+            // Footballs
+            ['name' => 'Wilson NFL Duke', 'subcategory' => 'Footballs', 'brand' => 'Wilson', 'cost' => 12000.00, 'price' => 16500.00],
+            ['name' => 'Adidas Al Rihla', 'subcategory' => 'Footballs', 'brand' => 'Adidas', 'cost' => 15000.00, 'price' => 20000.00],
+            ['name' => 'Nike Strike Ball', 'subcategory' => 'Footballs', 'brand' => 'Nike', 'cost' => 6500.00, 'price' => 9000.00],
+            ['name' => 'Spalding TF-1000 Ball', 'subcategory' => 'Footballs', 'brand' => 'Spalding', 'cost' => 18000.00, 'price' => 24000.00],
+
+            // Dumbbells
+            ['name' => 'Bowflex SelectTech', 'subcategory' => 'Dumbbells', 'brand' => 'Bowflex', 'cost' => 95000.00, 'price' => 130000.00],
+            ['name' => 'CAP Cast Iron Dumbbell', 'subcategory' => 'Dumbbells', 'brand' => 'CAP', 'cost' => 8000.00, 'price' => 11000.00],
+            ['name' => 'Amazon Basics Neoprene', 'subcategory' => 'Dumbbells', 'brand' => 'Amazon Basics', 'cost' => 4500.00, 'price' => 6000.00],
+            ['name' => 'Rogue Rubber Hex', 'subcategory' => 'Dumbbells', 'brand' => 'Rogue', 'cost' => 12000.00, 'price' => 16500.00],
+
+            // Yoga Mats
+            ['name' => 'Lululemon 5mm Mat', 'subcategory' => 'Yoga Mats', 'brand' => 'Lululemon', 'cost' => 18000.00, 'price' => 25000.00],
+            ['name' => 'Manduka PRO Mat', 'subcategory' => 'Yoga Mats', 'brand' => 'Manduka', 'cost' => 22000.00, 'price' => 30000.00],
+            ['name' => 'Gaiam Essentials Mat', 'subcategory' => 'Yoga Mats', 'brand' => 'Gaiam', 'cost' => 6500.00, 'price' => 9000.00],
+            ['name' => 'Jade Harmony Mat', 'subcategory' => 'Yoga Mats', 'brand' => 'Jade', 'cost' => 15000.00, 'price' => 21000.00],
+
+            // Water Bottles
+            ['name' => 'Hydro Flask 32oz', 'subcategory' => 'Water Bottles', 'brand' => 'Hydro Flask', 'cost' => 12000.00, 'price' => 16500.00],
+            ['name' => 'Yeti Rambler 26oz', 'subcategory' => 'Water Bottles', 'brand' => 'Yeti', 'cost' => 11000.00, 'price' => 15000.00],
+            ['name' => 'CamelBak Chute Mag', 'subcategory' => 'Water Bottles', 'brand' => 'CamelBak', 'cost' => 6500.00, 'price' => 9000.00],
+            ['name' => 'Nalgene Wide Mouth', 'subcategory' => 'Water Bottles', 'brand' => 'Nalgene', 'cost' => 4500.00, 'price' => 6000.00],
+
+            // Running Shoes
+            ['name' => 'Nike Air Zoom Pegasus', 'subcategory' => 'Running Shoes', 'brand' => 'Nike', 'cost' => 32000.00, 'price' => 44000.00],
+            ['name' => 'Adidas Ultraboost', 'subcategory' => 'Running Shoes', 'brand' => 'Adidas', 'cost' => 42000.00, 'price' => 58000.00],
+            ['name' => 'Brooks Ghost 15', 'subcategory' => 'Running Shoes', 'brand' => 'Brooks', 'cost' => 30000.00, 'price' => 42000.00],
+            ['name' => 'Asics Gel-Kayano 30', 'subcategory' => 'Running Shoes', 'brand' => 'Asics', 'cost' => 38000.00, 'price' => 52000.00],
+
+            // Notebooks
+            ['name' => 'Moleskine Classic', 'subcategory' => 'Notebooks', 'brand' => 'Moleskine', 'cost' => 4500.00, 'price' => 6000.00],
+            ['name' => 'Rhodia Webnotebook', 'subcategory' => 'Notebooks', 'brand' => 'Rhodia', 'cost' => 3800.00, 'price' => 5200.00],
+            ['name' => 'Leuchtturm1917 Medium', 'subcategory' => 'Notebooks', 'brand' => 'Leuchtturm1917', 'cost' => 4200.00, 'price' => 5800.00],
+            ['name' => 'Field Notes 3-Pack', 'subcategory' => 'Notebooks', 'brand' => 'Field Notes', 'cost' => 2200.00, 'price' => 3000.00],
+
+            // Pens
+            ['name' => 'Pilot G2 Gel Pens', 'subcategory' => 'Pens', 'brand' => 'Pilot', 'cost' => 1200.00, 'price' => 1650.00],
+            ['name' => 'Uni-ball Onyx Pens', 'subcategory' => 'Pens', 'brand' => 'Uni-ball', 'cost' => 800.00, 'price' => 1100.00],
+            ['name' => 'Parker Jotter Classic', 'subcategory' => 'Pens', 'brand' => 'Parker', 'cost' => 3500.00, 'price' => 4800.00],
+            ['name' => 'Sharpie S-Gel Pens', 'subcategory' => 'Pens', 'brand' => 'Sharpie', 'cost' => 1500.00, 'price' => 2000.00],
+
+            // Desk Organizers
+            ['name' => 'Mesh Desk Organizer', 'subcategory' => 'Desk Organizers', 'brand' => 'Mesh', 'cost' => 2500.00, 'price' => 3500.00],
+            ['name' => 'Wooden Desk Caddy', 'subcategory' => 'Desk Organizers', 'brand' => 'Wooden', 'cost' => 3800.00, 'price' => 5200.00],
+            ['name' => 'Leather Desk Pad', 'subcategory' => 'Desk Organizers', 'brand' => 'Leather', 'cost' => 6500.00, 'price' => 9000.00],
+            ['name' => 'Monitor Stand Riser', 'subcategory' => 'Desk Organizers', 'brand' => 'Monitor Stand', 'cost' => 5000.00, 'price' => 7000.00],
+
+            // Staplers
+            ['name' => 'Swingline 747 Classic', 'subcategory' => 'Staplers', 'brand' => 'Swingline', 'cost' => 4500.00, 'price' => 6000.00],
+            ['name' => 'Bostitch Office Staple', 'subcategory' => 'Staplers', 'brand' => 'Bostitch', 'cost' => 3500.00, 'price' => 4800.00],
+            ['name' => 'PaperPro InSpire', 'subcategory' => 'Staplers', 'brand' => 'PaperPro', 'cost' => 2800.00, 'price' => 3800.00],
+            ['name' => 'Rapid Supreme Press', 'subcategory' => 'Staplers', 'brand' => 'Rapid', 'cost' => 5000.00, 'price' => 6800.00],
+
+            // Paper Shredders
+            ['name' => 'Fellowes Powershred', 'subcategory' => 'Paper Shredders', 'brand' => 'Fellowes', 'cost' => 28000.00, 'price' => 38000.00],
+            ['name' => 'Amazon Basics Shredder', 'subcategory' => 'Paper Shredders', 'brand' => 'Amazon Basics', 'cost' => 15000.00, 'price' => 20000.00],
+            ['name' => 'Aurora AU800SD', 'subcategory' => 'Paper Shredders', 'brand' => 'Aurora', 'cost' => 18000.00, 'price' => 25000.00],
+            ['name' => 'Royal Sovereign Shred', 'subcategory' => 'Paper Shredders', 'brand' => 'Royal Sovereign', 'cost' => 22000.00, 'price' => 30000.00]
         ];
 
         $products = [];
         $prodIndex = 1;
+        $brandCache = [];
 
-        foreach ($productsData as $subName => $itemsList) {
+        foreach ($productsData as $item) {
+            $prodName = $item['name'];
+            $brandName = $item['brand'];
+            $costPrice = $item['cost'];
+            $sellingPrice = $item['price'];
+            $subName = $item['subcategory'];
+
             $subModel = $subcategories[$subName];
-            foreach ($itemsList as $index => $prodName) {
-                $code = 'PROD' . str_pad($prodIndex, 3, '0', STR_PAD_LEFT);
-                $barcode = '89010000' . str_pad($prodIndex, 4, '0', STR_PAD_LEFT);
-                $brandModel = $brands[($prodIndex - 1) % 10];
-                $supplierModel = $suppliers[($prodIndex - 1) % 10];
-                
-                // Set prices
-                $costPrice = round(rand(10, 500) + (rand(1, 99)/100), 2);
-                $sellingPrice = round($costPrice * 1.35, 2); // 35% margin
-                
-                $products[] = Product::create([
-                    'product_name' => $prodName,
-                    'product_code' => $code,
-                    'brand_id' => $brandModel->brand_id,
-                    'subcategory_id' => $subModel->subcategory_id,
-                    'price' => $sellingPrice,
-                    'unit' => $prodIndex % 10 === 0 ? 'box' : ($prodIndex % 15 === 0 ? 'kg' : 'pcs'),
-                    'status' => 'active',
-                    'description' => "Premium quality $prodName $subName from $brandModel->brand_name.",
-                    'user_id' => $admin->id,
-                    'barcode' => $barcode,
-                    'cost_price' => $costPrice,
-                    'weight' => rand(1, 10) . ' kg',
-                    'dimensions' => rand(5, 50) . 'x' . rand(5, 50) . 'x' . rand(5, 50) . ' cm',
-                    'supplier_id' => $supplierModel->supplier_id,
-                ]);
+            $supplierModel = $suppliers[($prodIndex - 1) % 10];
 
-                $prodIndex++;
+            if (!isset($brandCache[$brandName])) {
+                $brandCache[$brandName] = Brand::firstOrCreate(
+                    ['brand_name' => $brandName],
+                    [
+                        'brand_code' => 'BRD' . str_pad(count($brandCache) + 11, 3, '0', STR_PAD_LEFT),
+                        'contact_person' => 'Contact ' . $brandName,
+                        'phone' => '+94771234567',
+                        'email' => strtolower(str_replace(' ', '', $brandName)) . '@corp.com',
+                        'website' => strtolower(str_replace(' ', '', $brandName)) . '.com',
+                        'created_date' => Carbon::now()
+                    ]
+                );
             }
+            $brandModel = $brandCache[$brandName];
+
+            $code = 'PROD' . str_pad($prodIndex, 3, '0', STR_PAD_LEFT);
+            $barcode = '89010000' . str_pad($prodIndex, 4, '0', STR_PAD_LEFT);
+
+            $products[] = Product::create([
+                'product_name' => $prodName,
+                'product_code' => $code,
+                'brand_id' => $brandModel->brand_id,
+                'subcategory_id' => $subModel->subcategory_id,
+                'price' => $sellingPrice,
+                'unit' => $prodIndex % 10 === 0 ? 'box' : ($prodIndex % 15 === 0 ? 'kg' : 'pcs'),
+                'status' => 'active',
+                'description' => "Premium quality $prodName $subName from $brandModel->brand_name.",
+                'user_id' => $admin->id,
+                'barcode' => $barcode,
+                'cost_price' => $costPrice,
+                'weight' => rand(1, 10) . ' kg',
+                'dimensions' => rand(5, 50) . 'x' . rand(5, 50) . 'x' . rand(5, 50) . ' cm',
+                'supplier_id' => $supplierModel->supplier_id,
+            ]);
+
+            $prodIndex++;
         }
 
         // 14. Seed Stocks
