@@ -193,6 +193,11 @@ class InvoiceController extends Controller
             ], 400);
         }
 
+        $number = trim($number);
+        if (preg_match('/(INV-\d{8}-\d{4})/i', $number, $matches)) {
+            $number = strtoupper($matches[1]);
+        }
+
         $invoice = Invoice::with('items')
             ->where('invoice_number', $number)
             ->first();
