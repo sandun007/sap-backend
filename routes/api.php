@@ -67,7 +67,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('banks', BankController::class);
         Route::apiResource('purchases', PurchaseController::class);
         Route::get('purchases/product/{product_id}', [PurchaseController::class, 'getProductHistory']);
-Route::apiResource('invoices', InvoiceController::class);
+        Route::get('invoices/search', [InvoiceController::class, 'search']);
+        Route::post('invoices/return', [InvoiceController::class, 'processReturn']);
+        Route::apiResource('invoices', InvoiceController::class);
 
 
 

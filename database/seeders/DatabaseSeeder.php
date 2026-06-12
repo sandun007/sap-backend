@@ -533,135 +533,157 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        // 16. Seed Purchases (GRNs)
-        for ($p = 1; $p <= 10; $p++) {
-            $grnNo = 'GRN-' . Carbon::now()->year . '-' . str_pad($p, 4, '0', STR_PAD_LEFT);
-            $supplier = $suppliers[$p - 1];
-            $branch = $branches[($p - 1) % 5];
-            
-            // Generate purchase records with items
-            $purchase = Purchase::create([
-                'purchase_id' => $grnNo,
-                'supplier_id' => $supplier->supplier_id,
-                'branch_id' => $branch->branch_id,
-                'purchase_date' => Carbon::now()->subDays(15 - $p),
-                'reference_no' => 'REF-' . rand(10000, 99999),
-                'subtotal' => 0, // Calculate below
-                'tax_amount' => 0,
-                'discount' => 0,
-                'grand_total' => 0,
-                'payment_method' => $p % 2 === 0 ? 'Bank Transfer' : 'Cash',
-                'amount_paid' => 0,
-                'balance_due' => 0,
-                'payment_notes' => 'Paid in full',
-                'notes' => "Purchase record $p via seeder",
-                'bank_name' => $p % 2 === 0 ? 'BOC' : null,
-                'bank_reference' => $p % 2 === 0 ? 'TXN' . rand(100000, 999999) : null,
-            ]);
-
-            $subtotal = 0;
-            // Add 3-5 random items to this GRN
-            $numItems = rand(3, 5);
-            $selectedProds = array_slice($products, ($p - 1) * 5, $numItems);
-            
-            foreach ($selectedProds as $prod) {
-                $qty = rand(10, 30);
-                $itemSubtotal = $prod->cost_price * $qty;
-                $subtotal += $itemSubtotal;
-
-                PurchaseItem::create([
-                    'purchase_record_id' => $purchase->id,
+        // 16. Seed Purchases (GRNs) distributed over 5 months
+        $pIndex = 1;
+        for ($m = 4; $m >= 0; $m--) {
+            for ($i = 1; $i <= 3; $i++) {
+                $grnDate = Carbon::now()->subMonths($m)->subDays(rand(1, 28))->subHours(rand(1, 12));
+                $grnNo = 'GRN-' . $grnDate->year . '-' . str_pad($pIndex, 4, '0', STR_PAD_LEFT);
+                $supplier = $suppliers[($pIndex - 1) % 10];
+                $branch = $branches[($pIndex - 1) % 5];
+                
+                $purchase = Purchase::create([
                     'purchase_id' => $grnNo,
-                    'product_id' => $prod->product_id,
-                    'product_name' => $prod->product_name,
-                    'product_code' => $prod->product_code,
-                    'quantity' => $qty,
-                    'stock_price' => $prod->cost_price,
-                    'selling_price' => $prod->price,
+                    'supplier_id' => $supplier->supplier_id,
+                    'branch_id' => $branch->branch_id,
+                    'purchase_date' => $grnDate->toDateString(),
+                    'created_at' => $grnDate,
+                    'updated_at' => $grnDate,
+                    'reference_no' => 'REF-' . rand(10000, 99999),
+                    'subtotal' => 0, // Calculate below
+                    'tax_amount' => 0,
                     'discount' => 0,
-                    'subtotal' => $itemSubtotal,
+                    'grand_total' => 0,
+                    'payment_method' => $pIndex % 2 === 0 ? 'Bank Transfer' : 'Cash',
+                    'amount_paid' => 0,
+                    'balance_due' => 0,
+                    'payment_notes' => 'Paid in full',
+                    'notes' => "Purchase record $pIndex via seeder",
+                    'bank_name' => $pIndex % 2 === 0 ? 'BOC' : null,
+                    'bank_reference' => $pIndex % 2 === 0 ? 'TXN' . rand(100000, 999999) : null,
                 ]);
+
+                $subtotal = 0;
+                // Add 3-5 items to this GRN
+                $numItems = rand(3, 5);
+                $selectedProds = array_slice($products, (($pIndex - 1) * 3) % (count($products) - 5), $numItems);
+                
+                foreach ($selectedProds as $prod) {
+                    $qty = rand(10, 30);
+                    $itemSubtotal = $prod->cost_price * $qty;
+                    $subtotal += $itemSubtotal;
+
+                    PurchaseItem::create([
+                        'purchase_record_id' => $purchase->id,
+                        'purchase_id' => $grnNo,
+                        'product_id' => $prod->product_id,
+                        'product_name' => $prod->product_name,
+                        'product_code' => $prod->product_code,
+                        'quantity' => $qty,
+                        'stock_price' => $prod->cost_price,
+                        'selling_price' => $prod->price,
+                        'discount' => 0,
+                        'subtotal' => $itemSubtotal,
+                        'created_at' => $grnDate,
+                        'updated_at' => $grnDate,
+                    ]);
+                }
+
+                $tax = round($subtotal * 0.08, 2); // 8% tax
+                $discount = $pIndex % 3 === 0 ? 50.00 : 0.00;
+                $grandTotal = $subtotal + $tax - $discount;
+
+                $purchase->update([
+                    'subtotal' => $subtotal,
+                    'tax_amount' => $tax,
+                    'discount' => $discount,
+                    'grand_total' => $grandTotal,
+                    'amount_paid' => $grandTotal,
+                    'balance_due' => 0,
+                ]);
+
+                $pIndex++;
             }
-
-            $tax = round($subtotal * 0.08, 2); // 8% tax
-            $discount = $p % 3 === 0 ? 50.00 : 0.00;
-            $grandTotal = $subtotal + $tax - $discount;
-
-            $purchase->update([
-                'subtotal' => $subtotal,
-                'tax_amount' => $tax,
-                'discount' => $discount,
-                'grand_total' => $grandTotal,
-                'amount_paid' => $grandTotal,
-                'balance_due' => 0,
-            ]);
         }
 
-        // 17. Seed Orders
-        for ($o = 1; $o <= 15; $o++) {
-            $customer = $customers[$o - 1];
+        // 17. Seed Orders distributed over last 20 days
+        for ($o = 1; $o <= 25; $o++) {
+            $customer = $customers[($o - 1) % 15];
             $branch = $branches[($o - 1) % 5];
             $employee = $employees[($o - 1) % 15];
-            $ordNo = 'ORD-' . Carbon::now()->year . '-' . str_pad($o, 4, '0', STR_PAD_LEFT);
-            $totalAmt = rand(100, 1500);
+            
+            $orderDate = Carbon::now()->subDays(20 - $o)->subHours(rand(1, 12));
+            $ordNo = 'ORD-' . $orderDate->year . '-' . str_pad($o, 4, '0', STR_PAD_LEFT);
+            $totalAmt = rand(1000, 15000);
 
             Order::create([
                 'order_number' => $ordNo,
-                'order_date' => Carbon::now()->subDays(20 - $o),
+                'order_date' => $orderDate->toDateString(),
+                'created_at' => $orderDate,
+                'updated_at' => $orderDate,
                 'customer_id' => $customer->customer_id,
                 'branch_id' => $branch->branch_id,
                 'employee_id' => $employee->employee_id,
                 'total_amount' => $totalAmt,
-                'status' => $o % 4 === 0 ? 'Pending' : ($o % 5 === 0 ? 'Cancelled' : 'Completed'),
-                'payment_status' => $o % 4 === 0 ? 'Unpaid' : 'Paid',
+                'status' => $o % 6 === 0 ? 'Pending' : ($o % 7 === 0 ? 'Cancelled' : 'Completed'),
+                'payment_status' => $o % 6 === 0 ? 'Unpaid' : 'Paid',
                 'shipping_address' => $customer->address,
                 'notes' => "Sample order $o notes",
             ]);
         }
 
-        // 18. Seed Invoices (Sales)
-        for ($inv = 1; $inv <= 20; $inv++) {
-            $invNo = 'INV-' . Carbon::now()->year . '-' . str_pad($inv, 4, '0', STR_PAD_LEFT);
-            
-            $invoice = Invoice::create([
-                'invoice_number' => $invNo,
-                'net_total' => 0, // Calculate below
-                'payment_method' => $inv % 3 === 0 ? 'card' : 'cash',
-                'cash_given' => 0,
-                'balance_returned' => 0,
-                'status' => 'paid',
-                'created_at' => Carbon::now()->subDays(30 - $inv)->subHours(rand(1, 12)),
-            ]);
-
-            $total = 0;
-            // Add 2-4 items
-            $numItems = rand(2, 4);
-            $selectedProds = array_slice($products, ($inv - 1) * 4, $numItems);
-
-            foreach ($selectedProds as $prod) {
-                $qty = rand(1, 5);
-                $itemTotal = $prod->price * $qty;
-                $total += $itemTotal;
-
-                InvoiceItem::create([
-                    'invoice_id' => $invoice->invoice_id,
-                    'product_id' => $prod->product_id,
-                    'product_name' => $prod->product_name,
-                    'product_code' => $prod->product_code,
-                    'price' => $prod->price,
-                    'qty' => $qty,
-                    'total' => $itemTotal,
+        // 18. Seed Invoices (Sales) distributed over 5 months
+        $invIndex = 1;
+        for ($m = 4; $m >= 0; $m--) {
+            for ($i = 1; $i <= 16; $i++) {
+                $invDate = Carbon::now()->subMonths($m)->subDays(rand(1, 28))->subHours(rand(1, 12));
+                $invNo = 'INV-' . $invDate->year . '-' . str_pad($invIndex, 4, '0', STR_PAD_LEFT);
+                
+                $invoice = Invoice::create([
+                    'invoice_number' => $invNo,
+                    'net_total' => 0, // Calculate below
+                    'payment_method' => $invIndex % 3 === 0 ? 'card' : 'cash',
+                    'cash_given' => 0,
+                    'balance_returned' => 0,
+                    'status' => 'paid',
+                    'created_at' => $invDate,
+                    'updated_at' => $invDate,
                 ]);
+
+                $total = 0;
+                // Add 2-4 items
+                $numItems = rand(2, 4);
+                $selectedProds = array_slice($products, (($invIndex - 1) * 2) % (count($products) - 4), $numItems);
+
+                foreach ($selectedProds as $prod) {
+                    $qty = rand(1, 5);
+                    $itemTotal = $prod->price * $qty;
+                    $total += $itemTotal;
+
+                    InvoiceItem::create([
+                        'invoice_id' => $invoice->invoice_id,
+                        'product_id' => $prod->product_id,
+                        'product_name' => $prod->product_name,
+                        'product_code' => $prod->product_code,
+                        'price' => $prod->price,
+                        'qty' => $qty,
+                        'total' => $itemTotal,
+                        'created_at' => $invDate,
+                        'updated_at' => $invDate,
+                    ]);
+                }
+
+                $cashGiven = ceil($total / 100) * 100; // Round up to nearest 100
+                $balReturned = $cashGiven - $total;
+
+                $invoice->update([
+                    'net_total' => $total,
+                    'cash_given' => $invoice->payment_method === 'cash' ? $cashGiven : $total,
+                    'balance_returned' => $invoice->payment_method === 'cash' ? $balReturned : 0,
+                ]);
+
+                $invIndex++;
             }
-
-            $cashGiven = ceil($total / 50) * 50; // Round up to nearest 50
-            $balReturned = $cashGiven - $total;
-
-            $invoice->update([
-                'net_total' => $total,
-                'cash_given' => $invoice->payment_method === 'cash' ? $cashGiven : $total,
-                'balance_returned' => $invoice->payment_method === 'cash' ? $balReturned : 0,
-            ]);
         }
     }
 }

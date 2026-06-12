@@ -181,4 +181,133 @@ class InvoiceController extends Controller
             ], 500);
         }
     }
+
+    // GET /api/invoices/search?number=INV-xxxx
+    public function search(Request $request)
+    {
+        $number = $request->query('number');
+        if (!$number) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice number is required'
+            ], 400);
+        }
+
+        $invoice = Invoice::with('items')
+            ->where('invoice_number', $number)
+            ->first();
+
+        if (!$invoice) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $invoice
+        ]);
+    }
+
+    // POST /api/invoices/return
+    public function processReturn(Request $request)
+    {
+        $request->validate([
+            'invoice_number' => 'required|string|exists:invoices,invoice_number',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,product_id',
+            'items.*.qty_to_return' => 'required|integer|min:1',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $invoice = Invoice::with('items')->where('invoice_number', $request->invoice_number)->firstOrFail();
+            $refundAmount = 0;
+
+            foreach ($request->items as $returnItem) {
+                $productId = $returnItem['product_id'];
+                $qtyToReturn = $returnItem['qty_to_return'];
+
+                // Find the corresponding item in the invoice
+                $invoiceItem = $invoice->items->firstWhere('product_id', $productId);
+                if (!$invoiceItem) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Product ID {$productId} was not found in this invoice."
+                    ], 400);
+                }
+
+                if ($qtyToReturn > $invoiceItem->qty) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Cannot return {$qtyToReturn} units of {$invoiceItem->product_name}. Only {$invoiceItem->qty} units were purchased."
+                    ], 400);
+                }
+
+                // Calculate refund for this item
+                $itemRefund = $invoiceItem->price * $qtyToReturn;
+                $refundAmount += $itemRefund;
+
+                // Update invoice item quantity and total
+                $newQty = $invoiceItem->qty - $qtyToReturn;
+                if ($newQty === 0) {
+                    $invoiceItem->delete();
+                } else {
+                    $invoiceItem->update([
+                        'qty' => $newQty,
+                        'total' => $invoiceItem->price * $newQty
+                    ]);
+                }
+
+                // Return item back to stock (increment stock quantity)
+                $stock = \App\Models\Stock::where('product_id', $productId)->first();
+                if ($stock) {
+                    $qtyBefore = $stock->quantity;
+                    $stock->quantity += $qtyToReturn;
+                    $stock->save();
+
+                    // Create stock transaction record
+                    \App\Models\StockTransaction::create([
+                        'stock_id' => $stock->stock_id,
+                        'product_id' => $stock->product_id,
+                        'branch_id' => $stock->branch_id,
+                        'brand_id' => $stock->brand_id,
+                        'category_id' => $stock->category_id,
+                        'subcategory_id' => $stock->subcategory_id,
+                        'product_name' => $stock->product_name,
+                        'transaction_type' => 'in',
+                        'quantity_before' => $qtyBefore,
+                        'quantity_changed' => $qtyToReturn,
+                        'quantity_after' => $stock->quantity,
+                        'notes' => "Returned from invoice {$invoice->invoice_number}",
+                        'created_by' => auth()->id() ?? 1,
+                    ]);
+                }
+            }
+
+            // Update invoice net total
+            $invoice->update([
+                'net_total' => max(0, $invoice->net_total - $refundAmount)
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Invoice return processed successfully',
+                'refund_amount' => $refundAmount,
+                'data' => $invoice->load('items')
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to process return',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
