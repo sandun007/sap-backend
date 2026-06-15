@@ -355,7 +355,7 @@ class InvoiceController extends Controller
                 'success' => true,
                 'message' => 'Invoice return processed successfully',
                 'refund_amount' => $refundAmount,
-                'data' => $salesReturn->load('items')
+                'data' => $salesReturn->load(['items', 'invoice'])
             ]);
 
         } catch (\Exception $e) {
