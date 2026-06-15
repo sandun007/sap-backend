@@ -71,6 +71,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('invoices/search', [InvoiceController::class, 'search']);
         Route::post('invoices/return', [InvoiceController::class, 'processReturn']);
         Route::apiResource('invoices', InvoiceController::class);
+        Route::get('sales-returns/verify-credit', [SalesReturnController::class, 'verifyCreditNote']);
         Route::apiResource('sales-returns', SalesReturnController::class)->only(['index', 'show']);
 
 

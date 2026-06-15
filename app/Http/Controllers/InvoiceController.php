@@ -48,22 +48,56 @@ class InvoiceController extends Controller
             'payment_method'       => 'required|in:cash,card',
             'cash_given'           => 'nullable|numeric|min:0',
             'balance_returned'     => 'nullable|numeric|min:0',
+            'credit_note_code'     => 'nullable|string|exists:sales_returns,return_number',
+            'credit_amount_used'   => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
 
         try {
+            $creditAmountUsed = floatval($request->credit_amount_used ?? 0);
+            if ($request->credit_note_code && $creditAmountUsed > 0) {
+                // Find sales return
+                $salesReturn = \App\Models\SalesReturn::where('return_number', $request->credit_note_code)->first();
+                if (!$salesReturn) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Credit note voucher not found.'
+                    ], 400);
+                }
+
+                if ($salesReturn->refund_method !== 'store_credit') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Voucher code is not a store credit note.'
+                    ], 400);
+                }
+
+                if ($salesReturn->remaining_credit < $creditAmountUsed) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Insufficient store credit balance. Available: Rs. ' . number_format($salesReturn->remaining_credit, 2)
+                    ], 400);
+                }
+
+                // Deduct remaining credit
+                $salesReturn->remaining_credit -= $creditAmountUsed;
+                $salesReturn->save();
+            }
+
             // Generate invoice number e.g. INV-20260506-0001
             $count = Invoice::whereDate('created_at', today())->count() + 1;
             $invoiceNumber = 'INV-' . now()->format('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
 
             $invoice = Invoice::create([
-                'invoice_number'   => $invoiceNumber,
-                'net_total'        => $request->net_total,
-                'payment_method'   => $request->payment_method,
-                'cash_given'       => $request->cash_given,
-                'balance_returned' => $request->balance_returned,
-                'status'           => 'paid',
+                'invoice_number'     => $invoiceNumber,
+                'net_total'          => $request->net_total,
+                'payment_method'     => $request->payment_method,
+                'credit_note_code'   => $request->credit_note_code,
+                'credit_amount_used' => $creditAmountUsed > 0 ? $creditAmountUsed : null,
+                'cash_given'         => $request->cash_given,
+                'balance_returned'   => $request->balance_returned,
+                'status'             => 'paid',
             ]);
 
             foreach ($request->items as $item) {
@@ -346,7 +380,8 @@ class InvoiceController extends Controller
 
             // Update final refund amount
             $salesReturn->update([
-                'refund_amount' => $refundAmount
+                'refund_amount' => $refundAmount,
+                'remaining_credit' => $request->refund_method === 'store_credit' ? $refundAmount : 0
             ]);
 
             DB::commit();

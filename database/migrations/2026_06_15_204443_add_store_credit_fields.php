@@ -1,0 +1,37 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('sales_returns', function (Blueprint $table) {
+            $table->decimal('remaining_credit', 12, 2)->default(0.00)->after('refund_method');
+        });
+
+        Schema::table('invoices', function (Blueprint $table) {
+            $table->string('credit_note_code')->nullable()->after('payment_method');
+            $table->decimal('credit_amount_used', 12, 2)->nullable()->after('credit_note_code');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('sales_returns', function (Blueprint $table) {
+            $table->dropColumn('remaining_credit');
+        });
+
+        Schema::table('invoices', function (Blueprint $table) {
+            $table->dropColumn(['credit_note_code', 'credit_amount_used']);
+        });
+    }
+};

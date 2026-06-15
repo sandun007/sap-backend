@@ -17,6 +17,7 @@ class SalesReturn extends Model
         'invoice_id',
         'refund_amount',
         'refund_method',
+        'remaining_credit',
         'reason',
         'created_by',
     ];

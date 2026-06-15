@@ -13,6 +13,8 @@ class Invoice extends Model
         'invoice_number',
         'net_total',
         'payment_method',
+        'credit_note_code',
+        'credit_amount_used',
         'cash_given',
         'balance_returned',
         'status',
