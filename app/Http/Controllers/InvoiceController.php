@@ -234,7 +234,7 @@ class InvoiceController extends Controller
     {
         $request->validate([
             'invoice_number' => 'required|string|exists:invoices,invoice_number',
-            'refund_method'  => 'required|string|in:cash,card,store_credit',
+            'refund_method'  => 'required|string|in:cash,card,store_credit,no_refund',
             'reason'         => 'nullable|string|max:255',
             'items'          => 'required|array|min:1',
             'items.*.product_id'    => 'required|exists:products,product_id',
@@ -296,7 +296,7 @@ class InvoiceController extends Controller
                 }
 
                 // Calculate refund for this item
-                $itemRefund = $invoiceItem->price * $qtyToReturn;
+                $itemRefund = ($request->refund_method === 'no_refund') ? 0 : ($invoiceItem->price * $qtyToReturn);
                 $refundAmount += $itemRefund;
 
                 // Create Sales Return Item record
