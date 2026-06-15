@@ -209,6 +209,20 @@ class InvoiceController extends Controller
             ], 404);
         }
 
+        // Calculate returned quantities for each item on this invoice
+        $returnedQuantities = DB::table('sales_returns')
+            ->join('sales_return_items', 'sales_returns.return_id', '=', 'sales_return_items.return_id')
+            ->where('sales_returns.invoice_id', $invoice->invoice_id)
+            ->select('sales_return_items.product_id', DB::raw('SUM(sales_return_items.quantity) as total_returned'))
+            ->groupBy('sales_return_items.product_id')
+            ->pluck('total_returned', 'product_id');
+
+        // Append returned_qty to each item
+        foreach ($invoice->items as $item) {
+            $productId = $item->product_id;
+            $item->returned_qty = isset($returnedQuantities[$productId]) ? (int) $returnedQuantities[$productId] : 0;
+        }
+
         return response()->json([
             'success' => true,
             'data'    => $invoice
@@ -220,20 +234,47 @@ class InvoiceController extends Controller
     {
         $request->validate([
             'invoice_number' => 'required|string|exists:invoices,invoice_number',
-            'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,product_id',
+            'refund_method'  => 'required|string|in:cash,card,store_credit',
+            'reason'         => 'nullable|string|max:255',
+            'items'          => 'required|array|min:1',
+            'items.*.product_id'    => 'required|exists:products,product_id',
             'items.*.qty_to_return' => 'required|integer|min:1',
+            'items.*.condition'     => 'required|string|in:sellable,damaged',
         ]);
 
         DB::beginTransaction();
 
         try {
             $invoice = Invoice::with('items')->where('invoice_number', $request->invoice_number)->firstOrFail();
+
+            // Fetch already returned quantities for validation
+            $returnedQuantities = DB::table('sales_returns')
+                ->join('sales_return_items', 'sales_returns.return_id', '=', 'sales_return_items.return_id')
+                ->where('sales_returns.invoice_id', $invoice->invoice_id)
+                ->select('sales_return_items.product_id', DB::raw('SUM(sales_return_items.quantity) as total_returned'))
+                ->groupBy('sales_return_items.product_id')
+                ->pluck('total_returned', 'product_id');
+
+            // Generate return number e.g. RTN-20260615-0001
+            $count = \App\Models\SalesReturn::whereDate('created_at', today())->count() + 1;
+            $returnNumber = 'RTN-' . now()->format('Ymd') . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+
+            // Create Sales Return
+            $salesReturn = \App\Models\SalesReturn::create([
+                'return_number' => $returnNumber,
+                'invoice_id'    => $invoice->invoice_id,
+                'refund_amount' => 0, // Computed below
+                'refund_method' => $request->refund_method,
+                'reason'        => $request->reason,
+                'created_by'    => auth()->id() ?? 1,
+            ]);
+
             $refundAmount = 0;
 
             foreach ($request->items as $returnItem) {
-                $productId = $returnItem['product_id'];
+                $productId   = $returnItem['product_id'];
                 $qtyToReturn = $returnItem['qty_to_return'];
+                $condition   = $returnItem['condition'];
 
                 // Find the corresponding item in the invoice
                 $invoiceItem = $invoice->items->firstWhere('product_id', $productId);
@@ -244,10 +285,13 @@ class InvoiceController extends Controller
                     ], 400);
                 }
 
-                if ($qtyToReturn > $invoiceItem->qty) {
+                $alreadyReturned = isset($returnedQuantities[$productId]) ? (int) $returnedQuantities[$productId] : 0;
+                $maxReturnable   = $invoiceItem->qty - $alreadyReturned;
+
+                if ($qtyToReturn > $maxReturnable) {
                     return response()->json([
                         'success' => false,
-                        'message' => "Cannot return {$qtyToReturn} units of {$invoiceItem->product_name}. Only {$invoiceItem->qty} units were purchased."
+                        'message' => "Cannot return {$qtyToReturn} units of {$invoiceItem->product_name}. Only {$maxReturnable} units are available to return."
                     ], 400);
                 }
 
@@ -255,46 +299,54 @@ class InvoiceController extends Controller
                 $itemRefund = $invoiceItem->price * $qtyToReturn;
                 $refundAmount += $itemRefund;
 
-                // Update invoice item quantity and total
-                $newQty = $invoiceItem->qty - $qtyToReturn;
-                if ($newQty === 0) {
-                    $invoiceItem->delete();
-                } else {
-                    $invoiceItem->update([
-                        'qty' => $newQty,
-                        'total' => $invoiceItem->price * $newQty
-                    ]);
-                }
+                // Create Sales Return Item record
+                $salesReturn->items()->create([
+                    'product_id'   => $productId,
+                    'product_name' => $invoiceItem->product_name,
+                    'product_code' => $invoiceItem->product_code,
+                    'quantity'     => $qtyToReturn,
+                    'price'        => $invoiceItem->price,
+                    'total'        => $itemRefund,
+                    'condition'    => $condition,
+                ]);
 
-                // Return item back to stock (increment stock quantity)
+                // Update stock conditionally
                 $stock = \App\Models\Stock::where('product_id', $productId)->first();
                 if ($stock) {
                     $qtyBefore = $stock->quantity;
-                    $stock->quantity += $qtyToReturn;
-                    $stock->save();
+
+                    if ($condition === 'sellable') {
+                        $stock->quantity += $qtyToReturn;
+                        $stock->save();
+                        $qtyAfter = $stock->quantity;
+                        $notes    = "Returned from invoice {$invoice->invoice_number} (Sellable)";
+                    } else {
+                        $qtyAfter = $qtyBefore;
+                        $notes    = "Returned from invoice {$invoice->invoice_number} (Damaged - Written Off)";
+                    }
 
                     // Create stock transaction record
                     \App\Models\StockTransaction::create([
-                        'stock_id' => $stock->stock_id,
-                        'product_id' => $stock->product_id,
-                        'branch_id' => $stock->branch_id,
-                        'brand_id' => $stock->brand_id,
-                        'category_id' => $stock->category_id,
-                        'subcategory_id' => $stock->subcategory_id,
-                        'product_name' => $stock->product_name,
-                        'transaction_type' => 'in',
-                        'quantity_before' => $qtyBefore,
+                        'stock_id'         => $stock->stock_id,
+                        'product_id'       => $stock->product_id,
+                        'branch_id'        => $stock->branch_id,
+                        'brand_id'         => $stock->brand_id,
+                        'category_id'      => $stock->category_id,
+                        'subcategory_id'   => $stock->subcategory_id,
+                        'product_name'     => $stock->product_name,
+                        'transaction_type' => $condition === 'sellable' ? 'in' : 'out',
+                        'quantity_before'  => $qtyBefore,
                         'quantity_changed' => $qtyToReturn,
-                        'quantity_after' => $stock->quantity,
-                        'notes' => "Returned from invoice {$invoice->invoice_number}",
-                        'created_by' => auth()->id() ?? 1,
+                        'quantity_after'   => $qtyAfter,
+                        'notes'            => $notes,
+                        'created_by'       => auth()->id() ?? 1,
                     ]);
                 }
             }
 
-            // Update invoice net total
-            $invoice->update([
-                'net_total' => max(0, $invoice->net_total - $refundAmount)
+            // Update final refund amount
+            $salesReturn->update([
+                'refund_amount' => $refundAmount
             ]);
 
             DB::commit();
@@ -303,7 +355,7 @@ class InvoiceController extends Controller
                 'success' => true,
                 'message' => 'Invoice return processed successfully',
                 'refund_amount' => $refundAmount,
-                'data' => $invoice->load('items')
+                'data' => $salesReturn->load('items')
             ]);
 
         } catch (\Exception $e) {
@@ -311,7 +363,7 @@ class InvoiceController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to process return',
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage()
             ], 500);
         }
     }

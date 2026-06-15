@@ -20,6 +20,7 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SalesReturnController;
 
 
 
@@ -70,6 +71,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('invoices/search', [InvoiceController::class, 'search']);
         Route::post('invoices/return', [InvoiceController::class, 'processReturn']);
         Route::apiResource('invoices', InvoiceController::class);
+        Route::apiResource('sales-returns', SalesReturnController::class)->only(['index', 'show']);
 
 
 
