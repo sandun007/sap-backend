@@ -12,7 +12,11 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = Product::with(['brand', 'subcategory.category','user', 'stocks'])->get();
+            $products = Product::with(['brand', 'subcategory.category','user', 'stocks'])
+                ->withSum(['returnItems as damaged_quantity' => function($query) {
+                    $query->where('condition', 'damaged');
+                }], 'quantity')
+                ->get();
             
             return response()->json([
                 'success' => true,
