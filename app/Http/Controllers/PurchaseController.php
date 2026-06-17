@@ -118,7 +118,7 @@ class PurchaseController extends Controller
 
     private function updateStock($purchase, $itemData)
     {
-        $product = Product::find($itemData['product_id']);
+        $product = Product::with('subcategory')->find($itemData['product_id']);
         if (!$product) return;
 
         // Update product prices if they changed
@@ -140,6 +140,10 @@ class PurchaseController extends Controller
             $quantityBefore = $stock->quantity;
             $stock->quantity += $itemData['quantity'];
             $stock->last_restocked_date = now();
+            // Ensure category and other IDs are consistent even if they were missing
+            $stock->brand_id = $product->brand_id;
+            $stock->category_id = $product->subcategory->category_id ?? null;
+            $stock->subcategory_id = $product->subcategory_id;
             $stock->save();
         } else {
             $quantityBefore = 0;
@@ -147,7 +151,7 @@ class PurchaseController extends Controller
                 'product_id' => $itemData['product_id'],
                 'branch_id' => $purchase->branch_id,
                 'brand_id' => $product->brand_id,
-                'category_id' => $product->category_id,
+                'category_id' => $product->subcategory->category_id ?? null,
                 'subcategory_id' => $product->subcategory_id,
                 'product_name' => $product->product_name,
                 'quantity' => $itemData['quantity'],
@@ -156,6 +160,7 @@ class PurchaseController extends Controller
             ]);
         }
 
+        $supplier = \App\Models\Supplier::find($purchase->supplier_id);
         // Record Stock Transaction
         StockTransaction::create([
             'stock_id' => $stock->stock_id,
@@ -169,7 +174,8 @@ class PurchaseController extends Controller
             'quantity_before' => $quantityBefore,
             'quantity_changed' => $itemData['quantity'],
             'quantity_after' => $stock->quantity,
-            'notes' => "Purchased via GRN: {$purchase->purchase_id}",
+            'reference_number' => $purchase->purchase_id,
+            'notes' => "Purchased via GRN: {$purchase->purchase_id} from Supplier [{$supplier->supplier_name}]",
             'created_by' => auth()->id(),
         ]);
     }

@@ -32,6 +32,11 @@ class InvPara extends Model
         'expenses_code',
         'store_code',
         'status',
-        'package'
+        'package',
+        'auto_print_grn',
+        'show_print_preview',
+        'print_footer_text',
+        'grn_print_size',
+        'dashboard_logo_size'
     ];
 }

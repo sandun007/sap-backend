@@ -177,7 +177,6 @@ class ProductController extends Controller
             ], 500);
         }
     }
-
     public function getDropdownData()
     {
         try {

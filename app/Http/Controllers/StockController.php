@@ -7,6 +7,7 @@ use App\Models\Stock;
 use App\Models\Product;
 use App\Models\StockTransaction;
 use Exception;
+use App\Models\Branch;
 use Illuminate\Support\Facades\DB;
 
 class StockController extends Controller
@@ -475,6 +476,261 @@ class StockController extends Controller
     }
 }
 
+    /**
+     * Get Bin Card data (transactions filtered by branch, product, and date range)
+     */
+    public function getBinCard(Request $request)
+    {
+        try {
+            $branchId = $request->query('branch_id');
+            $productId = $request->query('product_id');
+            $fromDate = $request->query('from_date');
+            $toDate = $request->query('to_date');
+            $typesString = $request->query('types', 'ALL');
+            $types = explode(',', $typesString);
+
+            $query = StockTransaction::with(['stock', 'product', 'branch', 'brand', 'category', 'subcategory', 'creator'])
+                                     ->orderBy('created_at', 'desc'); // Newest first
+
+            if ($branchId) {
+                $query->where('branch_id', $branchId);
+            }
+
+            if ($productId) {
+                $query->where('product_id', $productId);
+            }
+
+            if ($fromDate) {
+                $query->whereDate('created_at', '>=', $fromDate);
+            }
+
+            if ($toDate) {
+                $query->whereDate('created_at', '<=', $toDate);
+            }
+
+            // Apply Transaction Type Filter (Multi-select)
+            if (!in_array('ALL', $types)) {
+                $query->where(function($q) use ($types) {
+                    foreach ($types as $type) {
+                        $q->orWhere(function($sub) use ($type) {
+                            if ($type === 'GRN') {
+                                $sub->where('notes', 'like', '%GRN%')
+                                    ->orWhere('notes', 'like', '%Purchase%')
+                                    ->orWhere('transaction_type', 'purchase')
+                                    ->orWhere('transaction_type', 'PURCHASE');
+                            } elseif ($type === 'TRANSFER') {
+                                $sub->where('notes', 'like', '%TRANSFER%');
+                            } elseif ($type === 'ADJUSTMENT') {
+                                $sub->where(function($inner) {
+                                    $inner->where(function($notesSub) {
+                                        $notesSub->where('notes', 'not like', '%TRANSFER%')
+                                                 ->where('notes', 'not like', '%GRN%')
+                                                 ->where('notes', 'not like', '%Purchase%')
+                                                 ->orWhereNull('notes');
+                                    })
+                                    ->whereNotIn('transaction_type', ['purchase', 'PURCHASE']);
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            $transactions = $query->paginate($request->query('per_page', 10));
+
+            // Pre-resolve Supplier Names for GRNs if possible to avoid N+1 queries
+            $purchaseIds = collect($transactions->items())
+                ->filter(function($t) {
+                    $notes = strtoupper($t->notes);
+                    return (str_contains($notes, 'GRN') || str_contains($notes, 'PURCHASE')) && !str_contains($notes, 'SUPPLIER');
+                })
+                ->map(function($t) {
+                    if ($t->reference_number) return $t->reference_number;
+                    preg_match('/GRN:\s*([A-Za-z0-9-]+)/i', $t->notes, $matches);
+                    return $matches[1] ?? null;
+                })
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            $purchaseMap = [];
+            if (!empty($purchaseIds)) {
+                $purchaseMap = \App\Models\Purchase::with('supplier')
+                    ->whereIn('purchase_id', $purchaseIds)
+                    ->get()
+                    ->keyBy('purchase_id');
+            }
+
+            // Transform data to match UI expectations while preserving pagination
+            $formattedData = collect($transactions->items())->map(function ($t) use ($purchaseMap) {
+                $type = strtoupper($t->transaction_type);
+                $notes = strtoupper($t->notes);
+                $finalNotes = $t->notes;
+                
+                // Detect Special Types from notes
+                if (str_contains($notes, 'TRANSFER')) {
+                    $type = (strtoupper($t->transaction_type) === 'IN') ? 'TRANSFER_IN' : 'TRANSFER_OUT';
+                } elseif (str_contains($notes, 'GRN') || str_contains($notes, 'PURCHASE')) {
+                    $type = 'PURCHASE'; // Will show as GRN in UI
+                    
+                    // Inject supplier name if missing
+                    if (!str_contains($notes, 'SUPPLIER')) {
+                        preg_match('/GRN:\s*([A-Za-z0-9-]+)/i', $t->notes, $matches);
+                        $pid = $t->reference_number ?? ($matches[1] ?? null);
+                        if ($pid && isset($purchaseMap[$pid]) && $purchaseMap[$pid]->supplier) {
+                            $finalNotes .= " from Supplier [{$purchaseMap[$pid]->supplier->supplier_name}]";
+                        }
+                    }
+                }
+
+                return [
+                    'id' => $t->id,
+                    'created_at' => $t->created_at,
+                    'type' => $type,
+                    'quantity' => abs($t->quantity_changed),
+                    'reference_no' => $t->reference_number ?? ($matches[1] ?? null),
+                    'notes' => $finalNotes
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bin card data retrieved successfully',
+                'data' => $formattedData,
+                'meta' => [
+                    'current_page' => $transactions->currentPage(),
+                    'last_page' => $transactions->lastPage(),
+                    'per_page' => $transactions->perPage(),
+                    'total' => $transactions->total()
+                ]
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve bin card data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Transfer stock between branches
+     */
+    public function transferStock(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'product_id' => 'required|exists:products,product_id',
+                'from_branch_id' => 'required|exists:branches,branch_id',
+                'to_branch_id' => 'required|exists:branches,branch_id|different:from_branch_id',
+                'quantity' => 'required|integer|min:1',
+                'notes' => 'nullable|string',
+                'reference_number' => 'nullable|string'
+            ]);
+
+            $fromBranch = Branch::find($data['from_branch_id']);
+            $toBranch = Branch::find($data['to_branch_id']);
+
+            DB::beginTransaction();
+
+            // 1. Get Source Stock
+            $sourceStock = Stock::where('product_id', $data['product_id'])
+                               ->where('branch_id', $data['from_branch_id'])
+                               ->first();
+
+            if (!$sourceStock || $sourceStock->quantity < $data['quantity']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient stock in source branch.'
+                ], 400);
+            }
+
+            // 2. Get or Create Destination Stock
+            $destStock = Stock::where('product_id', $data['product_id'])
+                             ->where('branch_id', $data['to_branch_id'])
+                             ->first();
+
+            if (!$destStock) {
+                // Create stock record for destination branch if it doesn't exist
+                $destStock = Stock::create([
+                    'product_id' => $sourceStock->product_id,
+                    'branch_id' => $data['to_branch_id'],
+                    'brand_id' => $sourceStock->brand_id,
+                    'category_id' => $sourceStock->category_id,
+                    'subcategory_id' => $sourceStock->subcategory_id,
+                    'product_name' => $sourceStock->product_name,
+                    'quantity' => 0,
+                    'minimum_stock_level' => $sourceStock->minimum_stock_level ?? 10,
+                ]);
+            }
+
+            // 3. Perform the movement
+            $sourceQtyBefore = $sourceStock->quantity;
+            $sourceStock->quantity -= $data['quantity'];
+            $sourceStock->save();
+
+            $destQtyBefore = $destStock->quantity;
+            $destStock->quantity += $data['quantity'];
+            $destStock->last_restocked_date = now();
+            $destStock->save();
+
+            // 4. Record Transactions (Simple way using existing types)
+            // Source (OUT)
+            StockTransaction::create([
+                'stock_id' => $sourceStock->stock_id,
+                'product_id' => $sourceStock->product_id,
+                'branch_id' => $sourceStock->branch_id,
+                'brand_id' => $sourceStock->brand_id,
+                'category_id' => $sourceStock->category_id,
+                'subcategory_id' => $sourceStock->subcategory_id,
+                'product_name' => $sourceStock->product_name,
+                'transaction_type' => 'out',
+                'quantity_before' => $sourceQtyBefore,
+                'quantity_changed' => -$data['quantity'],
+                'quantity_after' => $sourceStock->quantity,
+                'reference_number' => $data['reference_number'] ?? null,
+                'notes' => "STOCK TRANSFER: Sent to Branch [{$toBranch->branch_name}]. " . ($data['notes'] ?? ''),
+                'created_by' => auth()->id(),
+            ]);
+
+            // Destination (IN)
+            StockTransaction::create([
+                'stock_id' => $destStock->stock_id,
+                'product_id' => $destStock->product_id,
+                'branch_id' => $destStock->branch_id,
+                'brand_id' => $destStock->brand_id,
+                'category_id' => $destStock->category_id,
+                'subcategory_id' => $destStock->subcategory_id,
+                'product_name' => $destStock->product_name,
+                'transaction_type' => 'in',
+                'quantity_before' => $destQtyBefore,
+                'quantity_changed' => $data['quantity'],
+                'quantity_after' => $destStock->quantity,
+                'reference_number' => $data['reference_number'] ?? null,
+                'notes' => "STOCK TRANSFER: Received from Branch [{$fromBranch->branch_name}]. " . ($data['notes'] ?? ''),
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stock transferred successfully.',
+                'data' => [
+                    'source_stock' => $sourceStock,
+                    'destination_stock' => $destStock
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Transfer failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     // ========== STOCK TRANSACTION HISTORY METHODS ==========
 

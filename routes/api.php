@@ -17,11 +17,10 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\BankController;
-use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalesReturnController;
-
+use App\Http\Controllers\SettingController;
 
 
 
@@ -60,19 +59,22 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('branches', BranchController::class);
     Route::post('/branches/import', [BranchController::class, 'import']);
     Route::apiResource('employees', EmployeeController::class);
-    
+    Route::get('stocks/history', [StockController::class, 'getBinCard']);
     Route::apiResource('stocks', StockController::class);
     Route::apiResource('subcategories', SubCategoryController::class);
     Route::apiResource('orders', OrderController::class);
     Route::apiResource('stores', StoreController::class);
         Route::apiResource('banks', BankController::class);
         Route::apiResource('purchases', PurchaseController::class);
-        Route::get('purchases/product/{product_id}', [PurchaseController::class, 'getProductHistory']);
         Route::get('invoices/search', [InvoiceController::class, 'search']);
         Route::post('invoices/return', [InvoiceController::class, 'processReturn']);
         Route::apiResource('invoices', InvoiceController::class);
         Route::get('sales-returns/verify-credit', [SalesReturnController::class, 'verifyCreditNote']);
         Route::apiResource('sales-returns', SalesReturnController::class)->only(['index', 'show']);
+
+        // Settings Routes
+        Route::get('/settings', [SettingController::class, 'index']);
+        Route::post('/settings', [SettingController::class, 'update']);
 
 
 
@@ -91,13 +93,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Optional: Additional stock-related routes
     Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']);
-    Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']);
-
     // Dashboard Analytics
     Route::get('dashboard/stats', [DashboardController::class, 'getStats']);
     Route::get('dashboard/sales', [DashboardController::class, 'getSalesData']);
     Route::get('dashboard/stock-status', [DashboardController::class, 'getStockStatus']);
     Route::get('dashboard/recent-activity', [DashboardController::class, 'getRecentActivity']);
+
+    Route::post('stocks/transfer', [StockController::class, 'transferStock']);
 
 });
 

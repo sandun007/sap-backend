@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('employees', function (Blueprint $table) {
             // Rename phone to phone_num1
             if (Schema::hasColumn('employees', 'phone') && !Schema::hasColumn('employees', 'phone_num1')) {
-$table->string('phone_num1')->nullable()->after('phone');
+                $table->renameColumn('phone', 'phone_num1');
             }
 
             // Add phone_num2
