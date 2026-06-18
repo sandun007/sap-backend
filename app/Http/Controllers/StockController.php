@@ -15,7 +15,14 @@ class StockController extends Controller
     public function index()
     {
         try {
-            $stocks = Stock::with(['product', 'branch', 'brand', 'category', 'subcategory'])->get();
+            $stocks = Stock::with([
+                'product' => function($query) {
+                    $query->withSum(['returnItems as damaged_quantity' => function($q) {
+                        $q->where('condition', 'damaged');
+                    }], 'quantity');
+                },
+                'branch', 'brand', 'category', 'subcategory'
+            ])->get();
             
             return response()->json([
                 'success' => true,
@@ -403,9 +410,16 @@ class StockController extends Controller
     public function getLowStock()
     {
         try {
-            $stocks = Stock::with(['product', 'branch', 'brand', 'category', 'subcategory'])
-                          ->whereColumn('quantity', '<=', 'minimum_stock_level')
-                          ->get();
+            $stocks = Stock::with([
+                'product' => function($query) {
+                    $query->withSum(['returnItems as damaged_quantity' => function($q) {
+                        $q->where('condition', 'damaged');
+                    }], 'quantity');
+                },
+                'branch', 'brand', 'category', 'subcategory'
+            ])
+            ->whereColumn('quantity', '<=', 'minimum_stock_level')
+            ->get();
             
             return response()->json([
                 'success' => true,
@@ -428,9 +442,16 @@ class StockController extends Controller
     public function getStockByBranch($branch_id)
     {
         try {
-            $stocks = Stock::with(['product', 'branch', 'brand', 'category', 'subcategory'])
-                          ->where('branch_id', $branch_id)
-                          ->get();
+            $stocks = Stock::with([
+                'product' => function($query) {
+                    $query->withSum(['returnItems as damaged_quantity' => function($q) {
+                        $q->where('condition', 'damaged');
+                    }], 'quantity');
+                },
+                'branch', 'brand', 'category', 'subcategory'
+            ])
+            ->where('branch_id', $branch_id)
+            ->get();
             $totalQuantity = $stocks->sum('quantity');
             
             return response()->json([
@@ -454,9 +475,16 @@ class StockController extends Controller
     public function getStockByProduct($product_id)
 {
     try {
-        $stocks = Stock::with(['product', 'branch', 'brand', 'category', 'subcategory'])
-                        ->where('product_id', $product_id)
-                        ->get();
+        $stocks = Stock::with([
+            'product' => function($query) {
+                $query->withSum(['returnItems as damaged_quantity' => function($q) {
+                    $q->where('condition', 'damaged');
+                }], 'quantity');
+            },
+            'branch', 'brand', 'category', 'subcategory'
+        ])
+        ->where('product_id', $product_id)
+        ->get();
 
         // Calculate total quantity
         $totalQuantity = $stocks->sum('quantity');
