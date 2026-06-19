@@ -57,6 +57,15 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('employees', EmployeeController::class);
     
     Route::get('stocks/history', [StockController::class, 'getBinCard']);
+    Route::get('stocks/batches', [StockController::class, 'getProductBatches']);
+    Route::post('stocks/adjust-batches', [StockController::class, 'adjustBatches']);
+    Route::get('stocks/alerts/low-stock', [StockController::class, 'getLowStock']);
+    Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']);
+    Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']);
+    Route::post('stocks/transfer', [StockController::class, 'transferStock']);
+    Route::post('stocks/adjust', [StockController::class, 'adjustStock']);
+    Route::post('stocks/{id}/add', [StockController::class, 'addStock']);
+    Route::post('stocks/{id}/remove', [StockController::class, 'removeStock']);
     Route::apiResource('stocks', StockController::class);
     Route::apiResource('subcategories', SubCategoryController::class);
     Route::apiResource('orders', OrderController::class);
@@ -72,22 +81,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
 
 
-    // Stock Inventory Operations
-    Route::post('stocks/{id}/add', [StockController::class, 'addStock']);
-    Route::post('stocks/{id}/remove', [StockController::class, 'removeStock']);
-    Route::get('stocks/alerts/low-stock', [StockController::class, 'getLowStock']);
-
     // Stock Transaction History
     Route::get('stock-transactions', [StockController::class, 'getTransactionHistory']); // All transactions
     Route::get('stock-transactions/stock/{stock_id}', [StockController::class, 'getTransactionHistory']); // By stock
     Route::get('stock-transactions/product/{product_id}', [StockController::class, 'getTransactionsByProduct']); // By product
     Route::get('stock-transactions/branch/{branch_id}', [StockController::class, 'getTransactionsByBranch']); // By branch
     Route::post('stock-transactions/date-range', [StockController::class, 'getTransactionsByDateRange']); // By date range
-
-    // Optional: Additional stock-related routes
-    Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']);
-    Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']);
-    Route::post('stocks/transfer', [StockController::class, 'transferStock']);
 
 });
 

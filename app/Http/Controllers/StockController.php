@@ -514,22 +514,24 @@ class StockController extends Controller
                     foreach ($types as $type) {
                         $q->orWhere(function($sub) use ($type) {
                             if ($type === 'GRN') {
-                                $sub->where('notes', 'like', '%GRN%')
-                                    ->orWhere('notes', 'like', '%Purchase%')
-                                    ->orWhere('transaction_type', 'purchase')
-                                    ->orWhere('transaction_type', 'PURCHASE');
+                                $sub->where(function($inner) {
+                                    $inner->where('notes', 'like', '%GRN%')
+                                          ->orWhere('notes', 'like', '%Purchase%')
+                                          ->orWhere('transaction_type', 'purchase')
+                                          ->orWhere('transaction_type', 'PURCHASE');
+                                })->where('transaction_type', '!=', 'adjustment');
                             } elseif ($type === 'TRANSFER') {
                                 $sub->where('notes', 'like', '%TRANSFER%');
                             } elseif ($type === 'ADJUSTMENT') {
-                                $sub->where(function($inner) {
-                                    $inner->where(function($notesSub) {
-                                        $notesSub->where('notes', 'not like', '%TRANSFER%')
-                                                 ->where('notes', 'not like', '%GRN%')
-                                                 ->where('notes', 'not like', '%Purchase%')
-                                                 ->orWhereNull('notes');
-                                    })
-                                    ->whereNotIn('transaction_type', ['purchase', 'PURCHASE']);
-                                });
+                                $sub->where('transaction_type', 'adjustment');
+                            } elseif ($type === 'MANUAL') {
+                                $sub->whereIn('transaction_type', ['in', 'out'])
+                                    ->where(function($inner) {
+                                        $inner->where('notes', 'not like', '%TRANSFER%')
+                                              ->where('notes', 'not like', '%GRN%')
+                                              ->where('notes', 'not like', '%Purchase%')
+                                              ->orWhereNull('notes');
+                                    });
                             }
                         });
                     }
@@ -566,9 +568,20 @@ class StockController extends Controller
                 $type = strtoupper($t->transaction_type);
                 $notes = strtoupper($t->notes);
                 $finalNotes = $t->notes;
+                $refNo = $t->reference_number;
                 
-                // Detect Special Types from notes
-                if (str_contains($notes, 'TRANSFER')) {
+                // Detect Special Types from notes/transaction_type
+                if (strtolower($t->transaction_type) === 'adjustment') {
+                    $type = ($t->quantity_changed > 0) ? 'ADJUSTMENT_IN' : 'ADJUSTMENT_OUT';
+                    // Extract the GRN reference embedded in batch-adjustment notes, e.g.
+                    // "Batch Adj [GRN: GRN-460758-SEVX]: reason"  →  refNo = GRN-460758-SEVX
+                    if (!$refNo) {
+                        preg_match('/\[GRN:\s*([A-Za-z0-9-]+)\]/i', $t->notes, $adjMatches);
+                        if (!empty($adjMatches[1])) {
+                            $refNo = $adjMatches[1];
+                        }
+                    }
+                } elseif (str_contains($notes, 'TRANSFER')) {
                     $type = (strtoupper($t->transaction_type) === 'IN') ? 'TRANSFER_IN' : 'TRANSFER_OUT';
                 } elseif (str_contains($notes, 'GRN') || str_contains($notes, 'PURCHASE')) {
                     $type = 'PURCHASE'; // Will show as GRN in UI
@@ -577,19 +590,23 @@ class StockController extends Controller
                     if (!str_contains($notes, 'SUPPLIER')) {
                         preg_match('/GRN:\s*([A-Za-z0-9-]+)/i', $t->notes, $matches);
                         $pid = $t->reference_number ?? ($matches[1] ?? null);
-                        if ($pid && isset($purchaseMap[$pid]) && $purchaseMap[$pid]->supplier) {
-                            $finalNotes .= " from Supplier [{$purchaseMap[$pid]->supplier->supplier_name}]";
+                        if ($pid) {
+                            $refNo = $pid;
+                            if (isset($purchaseMap[$pid]) && $purchaseMap[$pid]->supplier) {
+                                $finalNotes .= " from Supplier [{$purchaseMap[$pid]->supplier->supplier_name}]";
+                            }
                         }
                     }
                 }
 
                 return [
-                    'id' => $t->id,
+                    'id' => $t->transaction_id,
                     'created_at' => $t->created_at,
                     'type' => $type,
                     'quantity' => abs($t->quantity_changed),
-                    'reference_no' => $t->reference_number ?? ($matches[1] ?? null),
-                    'notes' => $finalNotes
+                    'reference_no' => $refNo ?? 'N/A',
+                    'notes' => $finalNotes,
+                    'user' => $t->creator ? ($t->creator->name . ' (' . ucfirst($t->creator->role) . ')') : 'System'
                 ];
             });
 
@@ -728,6 +745,315 @@ class StockController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Transfer failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Adjust stock directly (structural stock adjustment)
+     */
+    public function adjustStock(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'product_id' => 'required|exists:products,product_id',
+                'branch_id' => 'required|exists:branches,branch_id',
+                'adjustment_type' => 'required|in:in,out',
+                'quantity' => 'required|integer|min:1',
+                'notes' => 'required|string|max:1000'
+            ]);
+
+            DB::beginTransaction();
+
+            // Find stock
+            $stock = Stock::where('product_id', $data['product_id'])
+                          ->where('branch_id', $data['branch_id'])
+                          ->first();
+
+            $product = Product::with('subcategory')->find($data['product_id']);
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found.'
+                ], 404);
+            }
+
+            if (!$stock) {
+                if ($data['adjustment_type'] === 'out') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot deduct stock. No stock record exists for this product at the selected branch.'
+                    ], 400);
+                }
+
+                // Create stock record
+                $stock = Stock::create([
+                    'product_id' => $product->product_id,
+                    'branch_id' => $data['branch_id'],
+                    'brand_id' => $product->brand_id,
+                    'category_id' => $product->subcategory->category_id ?? null,
+                    'subcategory_id' => $product->subcategory_id,
+                    'product_name' => $product->product_name,
+                    'quantity' => 0,
+                    'minimum_stock_level' => 10,
+                    'last_restocked_date' => now(),
+                ]);
+            }
+
+            $quantityBefore = $stock->quantity;
+            $quantityChanged = $data['quantity'];
+
+            if ($data['adjustment_type'] === 'out') {
+                if ($stock->quantity < $quantityChanged) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Insufficient stock. Available: {$stock->quantity}, trying to deduct: {$quantityChanged}."
+                    ], 400);
+                }
+                $stock->quantity -= $quantityChanged;
+                $quantityChanged = -$quantityChanged; // negative for out
+            } else {
+                $stock->quantity += $quantityChanged;
+            }
+
+            $stock->last_restocked_date = now();
+            $stock->save();
+
+            // Record transaction
+            $transaction = StockTransaction::create([
+                'stock_id' => $stock->stock_id,
+                'product_id' => $stock->product_id,
+                'branch_id' => $stock->branch_id,
+                'brand_id' => $stock->brand_id,
+                'category_id' => $stock->category_id,
+                'subcategory_id' => $stock->subcategory_id,
+                'product_name' => $stock->product_name,
+                'transaction_type' => 'adjustment',
+                'quantity_before' => $quantityBefore,
+                'quantity_changed' => $quantityChanged,
+                'quantity_after' => $stock->quantity,
+                'notes' => $data['notes'],
+                'created_by' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Stock adjusted successfully.',
+                'data' => [
+                    'stock' => $stock,
+                    'transaction' => $transaction
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Adjustment failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getProductBatches(Request $request)
+    {
+        try {
+            $productId = $request->query('product_id');
+            $branchId = $request->query('branch_id');
+
+            if (!$productId || !$branchId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product ID and Branch ID are required.'
+                ], 400);
+            }
+
+            $query = \App\Models\PurchaseItem::with('purchase')
+                ->where('product_id', $productId)
+                ->whereHas('purchase', function ($q) use ($branchId) {
+                    $q->where('branch_id', $branchId);
+                });
+
+            $batches = $query->orderBy('created_at', 'desc')->get();
+
+            // Only load GRNs where current system stock is > 0 (or recent history)
+            $activeBatches = $batches->filter(function ($b) {
+                return ($b->current_stock_qty ?? $b->quantity) > 0;
+            });
+
+            if ($activeBatches->isEmpty()) {
+                $activeBatches = $batches->take(10); // recent history
+            } else {
+                // Merge with recent history to satisfy both conditions in the rule
+                $activeBatches = $activeBatches->merge($batches->take(5))->unique('id');
+            }
+
+            $activeBatches = $activeBatches->sortByDesc('created_at');
+
+            $formattedBatches = $activeBatches->map(function ($b) {
+                return [
+                    'id' => $b->id,
+                    'purchase_id' => $b->purchase_id,
+                    'purchase_date' => $b->purchase->purchase_date ?? $b->created_at->format('Y-m-d'),
+                    'current_stock_qty' => $b->current_stock_qty ?? $b->quantity,
+                    'original_qty' => $b->quantity,
+                    'stock_price' => (float)$b->stock_price,
+                    'selling_price' => (float)$b->selling_price,
+                ];
+            })->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => $formattedBatches
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch batches: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function adjustBatches(Request $request)
+    {
+        try {
+            $request->validate([
+                'product_id' => 'required|exists:products,product_id',
+                'branch_id' => 'required|exists:branches,branch_id',
+                'reason' => 'nullable|string|max:1000',
+                'adjustments' => 'required|array|min:1',
+                'adjustments.*.purchase_item_id' => 'required|exists:purchase_items,id',
+                'adjustments.*.new_quantity' => 'required|integer|min:0',
+                'adjustments.*.new_cost_price' => 'nullable|numeric|min:0',
+                'adjustments.*.new_retail_price' => 'nullable|numeric|min:0',
+                'adjustments.*.reason' => 'nullable|string|max:1000',
+            ]);
+
+            $productId = $request->input('product_id');
+            $branchId = $request->input('branch_id');
+            $reason = $request->input('reason');
+            $adjustments = $request->input('adjustments');
+
+            DB::beginTransaction();
+
+            $product = Product::with('subcategory')->find($productId);
+            if (!$product) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Product not found.'
+                ], 404);
+            }
+
+            $stock = Stock::where('product_id', $productId)
+                          ->where('branch_id', $branchId)
+                          ->first();
+
+            if (!$stock) {
+                // If stock record doesn't exist, create it with 0 quantity
+                $stock = Stock::create([
+                    'product_id' => $productId,
+                    'branch_id' => $branchId,
+                    'brand_id' => $product->brand_id,
+                    'category_id' => $product->subcategory->category_id ?? null,
+                    'subcategory_id' => $product->subcategory_id,
+                    'product_name' => $product->product_name,
+                    'quantity' => 0,
+                    'minimum_stock_level' => 10,
+                    'last_restocked_date' => now(),
+                ]);
+            }
+
+            $transactions = [];
+
+            foreach ($adjustments as $adj) {
+                $purchaseItem = \App\Models\PurchaseItem::find($adj['purchase_item_id']);
+                
+                // 1. Calculate Qty discrepancy
+                $oldQty = $purchaseItem->current_stock_qty ?? $purchaseItem->quantity;
+                $newQty = $adj['new_quantity'];
+                $discrepancy = $newQty - $oldQty;
+
+                // 2. Perform price updates if provided
+                $priceChanged = false;
+                if (isset($adj['new_cost_price']) && (float)$adj['new_cost_price'] != (float)$purchaseItem->stock_price) {
+                    $purchaseItem->stock_price = $adj['new_cost_price'];
+                    $product->cost_price = $adj['new_cost_price'];
+                    $priceChanged = true;
+                }
+                if (isset($adj['new_retail_price']) && (float)$adj['new_retail_price'] != (float)$purchaseItem->selling_price) {
+                    $purchaseItem->selling_price = $adj['new_retail_price'];
+                    $product->price = $adj['new_retail_price'];
+                    $priceChanged = true;
+                }
+
+                if ($priceChanged) {
+                    $product->save();
+                }
+
+                if ($discrepancy == 0) {
+                    if ($priceChanged) {
+                        $purchaseItem->save();
+                    }
+                    continue; // No stock change
+                }
+
+                // Check negative stock for the branch-product stock overall
+                $quantityBefore = $stock->quantity;
+                $quantityAfter = $quantityBefore + $discrepancy;
+
+                if ($quantityAfter < 0) {
+                    throw new \Exception("Cannot adjust stock. Total stock at branch would become negative ({$quantityAfter}) due to batch adjustment on GRN [{$purchaseItem->purchase_id}].");
+                }
+
+                // Update purchase item's batch stock
+                $purchaseItem->current_stock_qty = $newQty;
+                $purchaseItem->save();
+
+                // Update stock record
+                $stock->quantity = $quantityAfter;
+                $stock->last_restocked_date = now();
+                $stock->save();
+
+                $adjReason = !empty($adj['reason']) ? $adj['reason'] : $reason;
+
+                // Create stock transaction record
+                $transaction = StockTransaction::create([
+                    'stock_id' => $stock->stock_id,
+                    'product_id' => $productId,
+                    'branch_id' => $branchId,
+                    'brand_id' => $stock->brand_id,
+                    'category_id' => $stock->category_id,
+                    'subcategory_id' => $stock->subcategory_id,
+                    'product_name' => $stock->product_name,
+                    'transaction_type' => 'adjustment',
+                    'quantity_before' => $quantityBefore,
+                    'quantity_changed' => $discrepancy,
+                    'quantity_after' => $quantityAfter,
+                    'notes' => "Batch Adj [GRN: {$purchaseItem->purchase_id}]: {$adjReason}",
+                    'created_by' => auth()->id(),
+                ]);
+
+                $transactions[] = $transaction;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Batch stock adjusted successfully.',
+                'data' => [
+                    'stock_quantity' => $stock->quantity,
+                    'transactions_count' => count($transactions)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Batch adjustment failed: ' . $e->getMessage()
             ], 500);
         }
     }

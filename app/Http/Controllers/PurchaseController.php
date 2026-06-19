@@ -75,6 +75,7 @@ class PurchaseController extends Controller
                     'product_name' => $itemData['product_name'],
                     'product_code' => $itemData['product_code'],
                     'quantity' => $itemData['quantity'],
+                    'current_stock_qty' => $itemData['quantity'],
                     'stock_price' => $itemData['stock_price'],
                     'selling_price' => $itemData['selling_price'],
                     'discount' => $itemData['discount'] ?? 0,
