@@ -6,17 +6,50 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use Exception;
 
+use Illuminate\Support\Facades\DB;
+
 class ProductController extends Controller
 {
     // List all products
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $products = Product::with(['brand', 'subcategory.category','user', 'stocks'])
-                ->withSum(['returnItems as damaged_quantity' => function($query) {
-                    $query->where('condition', 'damaged');
-                }], 'quantity')
-                ->get();
+            $query = Product::with(['brand', 'subcategory.category','user', 'stocks'])
+                ->withSum(['returnItems as damaged_quantity' => function($q) {
+                    $q->where('condition', 'damaged');
+                }], 'quantity');
+
+            if ($request->filled('has_transactions')) {
+                // Match any product that has EITHER a transaction record OR a stock record
+                // for the given branch. This ensures all 5 products visible on the Live Stock
+                // page also appear in the Bin Card product dropdown.
+                $branchId = $request->input('branch_id');
+
+                $query->where(function ($orQuery) use ($request, $branchId) {
+                    // Condition 1: Has at least one stock_transaction for this branch
+                    $orQuery->whereExists(function ($subQuery) use ($branchId) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('stock_transactions')
+                            ->whereColumn('stock_transactions.product_id', 'products.product_id');
+
+                        if ($branchId) {
+                            $subQuery->where('stock_transactions.branch_id', $branchId);
+                        }
+                    });
+
+                    // Condition 2: Has a stock record (row in stocks table) for this branch
+                    if ($branchId) {
+                        $orQuery->orWhereExists(function ($subQuery) use ($branchId) {
+                            $subQuery->select(DB::raw(1))
+                                ->from('stocks')
+                                ->whereColumn('stocks.product_id', 'products.product_id')
+                                ->where('stocks.branch_id', $branchId);
+                        });
+                    }
+                });
+            }
+
+            $products = $query->get();
             
             return response()->json([
                 'success' => true,

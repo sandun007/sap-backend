@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -14,7 +15,7 @@ return new class extends Migration
         Schema::table('employees', function (Blueprint $table) {
             // Rename phone to phone_num1
             if (Schema::hasColumn('employees', 'phone') && !Schema::hasColumn('employees', 'phone_num1')) {
-                $table->renameColumn('phone', 'phone_num1');
+                DB::statement("ALTER TABLE employees CHANGE phone phone_num1 VARCHAR(255) NULL");
             }
 
             // Add phone_num2

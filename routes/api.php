@@ -21,6 +21,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalesReturnController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\PurchaseController;
 
 
 
@@ -59,6 +60,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('branches', BranchController::class);
     Route::post('/branches/import', [BranchController::class, 'import']);
     Route::apiResource('employees', EmployeeController::class);
+    Route::get('stocks/batches', [StockController::class, 'getProductBatches']);
+    Route::post('stocks/adjust-batches', [StockController::class, 'adjustBatches']);
+    Route::post('stocks/adjust', [StockController::class, 'adjustStock']);
+    Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']);
     Route::get('stocks/history', [StockController::class, 'getBinCard']);
     Route::apiResource('stocks', StockController::class);
     Route::apiResource('subcategories', SubCategoryController::class);

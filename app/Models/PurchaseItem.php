@@ -16,6 +16,7 @@ class PurchaseItem extends Model
         'product_name',
         'product_code',
         'quantity',
+        'current_stock_qty',
         'stock_price',
         'selling_price',
         'discount',

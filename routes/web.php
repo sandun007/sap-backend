@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', [AdminController::class, 'login'])->name('login');
+Route::get('/', function() {
+    return response()->json(['message' => 'Welcome to Nexus ERP API']);
+})->name('login');
 
 
