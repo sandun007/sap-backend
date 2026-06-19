@@ -67,6 +67,13 @@ class DatabaseSeeder extends Seeder
             'role' => 'admin',
         ]);
 
+        User::create([
+            'name' => 'SAP',
+            'email' => 'admin@sap.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+        ]);
+
         for ($i = 1; $i <= 4; $i++) {
             User::create([
                 'name' => "Employee $i",
