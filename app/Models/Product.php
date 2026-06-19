@@ -52,4 +52,9 @@ class Product extends Model
     {
         return $this->hasMany(SalesReturnItem::class, 'product_id', 'product_id');
     }
+
+    public function purchaseReturnItems()
+    {
+        return $this->hasMany(PurchaseReturnItem::class, 'product_id', 'product_id');
+    }
 }

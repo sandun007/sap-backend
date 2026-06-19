@@ -12,17 +12,33 @@ use Illuminate\Support\Facades\DB;
 
 class StockController extends Controller
 {
+    private function calculateNetDamaged($stocks)
+    {
+        return $stocks->map(function ($s) {
+            if ($s->product) {
+                $salesDamaged = (int)$s->product->sales_damaged_qty;
+                $supplierDamaged = (int)$s->product->supplier_damaged_qty;
+                $s->product->damaged_quantity = max(0, $salesDamaged - $supplierDamaged);
+            }
+            return $s;
+        });
+    }
+
     public function index()
     {
         try {
             $stocks = Stock::with([
                 'product' => function($query) {
-                    $query->withSum(['returnItems as damaged_quantity' => function($q) {
+                    $query->withSum(['returnItems as sales_damaged_qty' => function($q) {
                         $q->where('condition', 'damaged');
+                    }], 'quantity')
+                    ->withSum(['purchaseReturnItems as supplier_damaged_qty' => function($q) {
+                        $q->where('return_type', 'damaged');
                     }], 'quantity');
                 },
                 'branch', 'brand', 'category', 'subcategory'
             ])->get();
+            $stocks = $this->calculateNetDamaged($stocks);
             
             return response()->json([
                 'success' => true,
@@ -412,14 +428,18 @@ class StockController extends Controller
         try {
             $stocks = Stock::with([
                 'product' => function($query) {
-                    $query->withSum(['returnItems as damaged_quantity' => function($q) {
+                    $query->withSum(['returnItems as sales_damaged_qty' => function($q) {
                         $q->where('condition', 'damaged');
+                    }], 'quantity')
+                    ->withSum(['purchaseReturnItems as supplier_damaged_qty' => function($q) {
+                        $q->where('return_type', 'damaged');
                     }], 'quantity');
                 },
                 'branch', 'brand', 'category', 'subcategory'
             ])
             ->whereColumn('quantity', '<=', 'minimum_stock_level')
             ->get();
+            $stocks = $this->calculateNetDamaged($stocks);
             
             return response()->json([
                 'success' => true,
@@ -444,14 +464,18 @@ class StockController extends Controller
         try {
             $stocks = Stock::with([
                 'product' => function($query) {
-                    $query->withSum(['returnItems as damaged_quantity' => function($q) {
+                    $query->withSum(['returnItems as sales_damaged_qty' => function($q) {
                         $q->where('condition', 'damaged');
+                    }], 'quantity')
+                    ->withSum(['purchaseReturnItems as supplier_damaged_qty' => function($q) {
+                        $q->where('return_type', 'damaged');
                     }], 'quantity');
                 },
                 'branch', 'brand', 'category', 'subcategory'
             ])
             ->where('branch_id', $branch_id)
             ->get();
+            $stocks = $this->calculateNetDamaged($stocks);
             $totalQuantity = $stocks->sum('quantity');
             
             return response()->json([
@@ -477,14 +501,18 @@ class StockController extends Controller
     try {
         $stocks = Stock::with([
             'product' => function($query) {
-                $query->withSum(['returnItems as damaged_quantity' => function($q) {
+                $query->withSum(['returnItems as sales_damaged_qty' => function($q) {
                     $q->where('condition', 'damaged');
+                }], 'quantity')
+                ->withSum(['purchaseReturnItems as supplier_damaged_qty' => function($q) {
+                    $q->where('return_type', 'damaged');
                 }], 'quantity');
             },
             'branch', 'brand', 'category', 'subcategory'
         ])
         ->where('product_id', $product_id)
         ->get();
+        $stocks = $this->calculateNetDamaged($stocks);
 
         // Calculate total quantity
         $totalQuantity = $stocks->sum('quantity');
@@ -547,7 +575,8 @@ class StockController extends Controller
                                           ->orWhere('notes', 'like', '%Purchase%')
                                           ->orWhere('transaction_type', 'purchase')
                                           ->orWhere('transaction_type', 'PURCHASE');
-                                })->where('transaction_type', '!=', 'adjustment');
+                                })->where('transaction_type', '!=', 'adjustment')
+                                  ->where('notes', 'not like', '%Return%');
                             } elseif ($type === 'TRANSFER') {
                                 $sub->where('notes', 'like', '%TRANSFER%');
                             } elseif ($type === 'ADJUSTMENT') {
@@ -600,6 +629,8 @@ class StockController extends Controller
                 // Detect Special Types from notes
                 if (str_contains($notes, 'TRANSFER')) {
                     $type = (strtoupper($t->transaction_type) === 'IN') ? 'TRANSFER_IN' : 'TRANSFER_OUT';
+                } elseif (str_contains($notes, 'RETURN') && str_contains($notes, 'PURCHASE')) {
+                    $type = 'PURCHASE_RETURN';
                 } elseif (str_contains($notes, 'GRN') || str_contains($notes, 'PURCHASE')) {
                     $type = 'PURCHASE'; // Will show as GRN in UI
                     
@@ -611,6 +642,8 @@ class StockController extends Controller
                             $finalNotes .= " from Supplier [{$purchaseMap[$pid]->supplier->supplier_name}]";
                         }
                     }
+                } elseif ($type === 'ADJUSTMENT') {
+                    $type = ($t->quantity_changed > 0) ? 'ADJUSTMENT_ADD' : 'ADJUSTMENT_SUB';
                 }
 
                 return [

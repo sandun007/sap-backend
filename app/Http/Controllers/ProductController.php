@@ -15,8 +15,11 @@ class ProductController extends Controller
     {
         try {
             $query = Product::with(['brand', 'subcategory.category','user', 'stocks'])
-                ->withSum(['returnItems as damaged_quantity' => function($q) {
+                ->withSum(['returnItems as sales_damaged_qty' => function($q) {
                     $q->where('condition', 'damaged');
+                }], 'quantity')
+                ->withSum(['purchaseReturnItems as supplier_damaged_qty' => function($q) {
+                    $q->where('return_type', 'damaged');
                 }], 'quantity');
 
             if ($request->filled('has_transactions')) {
@@ -49,7 +52,12 @@ class ProductController extends Controller
                 });
             }
 
-            $products = $query->get();
+            $products = $query->get()->map(function ($p) {
+                $salesDamaged = (int)$p->sales_damaged_qty;
+                $supplierDamaged = (int)$p->supplier_damaged_qty;
+                $p->damaged_quantity = max(0, $salesDamaged - $supplierDamaged);
+                return $p;
+            });
             
             return response()->json([
                 'success' => true,

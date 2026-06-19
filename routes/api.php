@@ -22,6 +22,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SalesReturnController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\PurchaseReturnController;
 
 
 
@@ -71,6 +72,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('stores', StoreController::class);
         Route::apiResource('banks', BankController::class);
         Route::apiResource('purchases', PurchaseController::class);
+        Route::get('purchase-returns/supplier/{supplier_id}/products', [PurchaseReturnController::class, 'getSupplierProducts']);
+        Route::apiResource('purchase-returns', PurchaseReturnController::class);
         Route::get('invoices/search', [InvoiceController::class, 'search']);
         Route::post('invoices/return', [InvoiceController::class, 'processReturn']);
         Route::apiResource('invoices', InvoiceController::class);
