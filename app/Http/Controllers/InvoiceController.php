@@ -368,7 +368,7 @@ class InvoiceController extends Controller
                         'category_id'      => $stock->category_id,
                         'subcategory_id'   => $stock->subcategory_id,
                         'product_name'     => $stock->product_name,
-                        'transaction_type' => $condition === 'sellable' ? 'in' : 'out',
+                        'transaction_type' => 'in',
                         'quantity_before'  => $qtyBefore,
                         'quantity_changed' => $qtyToReturn,
                         'quantity_after'   => $qtyAfter,
