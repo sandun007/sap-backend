@@ -11,6 +11,7 @@ class Invoice extends Model
 
     protected $fillable = [
         'invoice_number',
+        'branch_id',
         'net_total',
         'payment_method',
         'credit_note_code',
@@ -25,6 +26,11 @@ class Invoice extends Model
     public function getBalanceReturnAttribute()
     {
         return $this->balance_returned;
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id', 'branch_id');
     }
 
     public function items()

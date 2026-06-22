@@ -648,6 +648,7 @@ class DatabaseSeeder extends Seeder
                 
                 $invoice = Invoice::create([
                     'invoice_number' => $invNo,
+                    'branch_id' => ($invIndex % 3) + 1,
                     'net_total' => 0, // Calculate below
                     'payment_method' => $invIndex % 3 === 0 ? 'card' : 'cash',
                     'cash_given' => 0,

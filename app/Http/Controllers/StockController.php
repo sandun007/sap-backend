@@ -646,6 +646,8 @@ class StockController extends Controller
                     $type = ($t->quantity_changed > 0) ? 'ADJUSTMENT_ADD' : 'ADJUSTMENT_SUB';
                 }
 
+                $isDamaged = str_contains(strtoupper($t->notes), 'DAMAGED');
+
                 return [
                     'id' => $t->id,
                     'created_at' => $t->created_at,
@@ -653,6 +655,7 @@ class StockController extends Controller
                     'quantity' => abs($t->quantity_changed),
                     'reference_no' => $t->reference_number ?? ($matches[1] ?? null),
                     'notes' => $finalNotes,
+                    'is_damaged' => $isDamaged,
                     'user' => $t->creator ? ($t->creator->name . ' (' . ucfirst($t->creator->role) . ')') : 'System'
                 ];
             });

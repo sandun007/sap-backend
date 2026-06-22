@@ -38,6 +38,7 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'branch_id'            => 'required|exists:branches,branch_id',
             'items'                => 'required|array|min:1',
             'items.*.product_id'   => 'required|exists:products,product_id',
             'items.*.product_name' => 'required|string',
@@ -60,24 +61,15 @@ class InvoiceController extends Controller
                 // Find sales return
                 $salesReturn = \App\Models\SalesReturn::where('return_number', $request->credit_note_code)->first();
                 if (!$salesReturn) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Credit note voucher not found.'
-                    ], 400);
+                    throw new \Exception('Credit note voucher not found.');
                 }
 
                 if ($salesReturn->refund_method !== 'store_credit') {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Voucher code is not a store credit note.'
-                    ], 400);
+                    throw new \Exception('Voucher code is not a store credit note.');
                 }
 
                 if ($salesReturn->remaining_credit < $creditAmountUsed) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Insufficient store credit balance. Available: Rs. ' . number_format($salesReturn->remaining_credit, 2)
-                    ], 400);
+                    throw new \Exception('Insufficient store credit balance. Available: Rs. ' . number_format($salesReturn->remaining_credit, 2));
                 }
 
                 // Deduct remaining credit
@@ -91,6 +83,7 @@ class InvoiceController extends Controller
 
             $invoice = Invoice::create([
                 'invoice_number'     => $invoiceNumber,
+                'branch_id'          => $request->branch_id,
                 'net_total'          => $request->net_total,
                 'payment_method'     => $request->payment_method,
                 'credit_note_code'   => $request->credit_note_code,
@@ -101,6 +94,40 @@ class InvoiceController extends Controller
             ]);
 
             foreach ($request->items as $item) {
+                // 1. Find Stock record at this specific branch
+                $stock = \App\Models\Stock::where('product_id', $item['product_id'])
+                    ->where('branch_id', $request->branch_id)
+                    ->first();
+
+                if (!$stock || $stock->quantity < $item['qty']) {
+                    $available = $stock ? $stock->quantity : 0;
+                    throw new \Exception("Insufficient stock for product [{$item['product_name']}]. Available: {$available}, requested: {$item['qty']}.");
+                }
+
+                // 2. Deduct quantity
+                $qtyBefore = $stock->quantity;
+                $stock->quantity -= $item['qty'];
+                $stock->save();
+
+                // 3. Log Stock Transaction
+                \App\Models\StockTransaction::create([
+                    'stock_id'         => $stock->stock_id,
+                    'product_id'       => $stock->product_id,
+                    'branch_id'        => $stock->branch_id,
+                    'brand_id'         => $stock->brand_id,
+                    'category_id'      => $stock->category_id,
+                    'subcategory_id'   => $stock->subcategory_id,
+                    'product_name'     => $stock->product_name,
+                    'transaction_type' => 'out',
+                    'quantity_before'  => $qtyBefore,
+                    'quantity_changed' => -$item['qty'], // Outflow is negative
+                    'quantity_after'   => $stock->quantity,
+                    'reference_number' => $invoice->invoice_number,
+                    'notes'            => "Sold via invoice {$invoice->invoice_number}",
+                    'created_by'       => auth()->id() ?? 1,
+                ]);
+
+                // 4. Create Invoice Item
                 $invoice->items()->create([
                     'product_id'   => $item['product_id'],
                     'product_name' => $item['product_name'],
@@ -121,11 +148,11 @@ class InvoiceController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            $status = strpos($e->getMessage(), 'Insufficient stock') !== false ? 400 : 500;
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create invoice',
-                'error'   => $e->getMessage()
-            ], 500);
+                'message' => $e->getMessage()
+            ], $status);
         }
     }
 
@@ -345,7 +372,9 @@ class InvoiceController extends Controller
                 ]);
 
                 // Update stock conditionally
-                $stock = \App\Models\Stock::where('product_id', $productId)->first();
+                $stock = \App\Models\Stock::where('product_id', $productId)
+                    ->where('branch_id', $invoice->branch_id)
+                    ->first();
                 if ($stock) {
                     $qtyBefore = $stock->quantity;
 
