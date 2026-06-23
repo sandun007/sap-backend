@@ -185,7 +185,7 @@ class PurchaseController extends Controller
     public function show($id)
     {
         try {
-            $purchase = Purchase::with(['supplier', 'branch', 'items'])->where('purchase_id', $id)->firstOrFail();
+            $purchase = Purchase::with(['supplier', 'branch', 'items.product'])->where('purchase_id', $id)->firstOrFail();
             
             // Map flat names for frontend convenience
             $purchase->supplier_name = $purchase->supplier->supplier_name ?? 'N/A';
@@ -250,4 +250,40 @@ class PurchaseController extends Controller
             ], 500);
         }
     }
+
+    public function getNextPurchaseId()
+    {
+        try {
+            $lastPurchase = Purchase::where('purchase_id', 'like', 'GRN-%')
+                ->get()
+                ->filter(function ($purchase) {
+                    return preg_match('/^GRN-\d+$/', $purchase->purchase_id);
+                })
+                ->sortByDesc(function ($purchase) {
+                    preg_match('/^GRN-(\d+)$/', $purchase->purchase_id, $matches);
+                    return intval($matches[1]);
+                })
+                ->first();
+
+            if ($lastPurchase) {
+                preg_match('/^GRN-(\d+)$/', $lastPurchase->purchase_id, $matches);
+                $nextNumber = intval($matches[1]) + 1;
+            } else {
+                $nextNumber = 1;
+            }
+
+            $nextId = 'GRN-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+
+            return response()->json([
+                'success' => true,
+                'next_id' => $nextId
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
+

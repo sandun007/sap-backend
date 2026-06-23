@@ -60,6 +60,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('stocks/batches', [StockController::class, 'getProductBatches']);
     Route::post('stocks/adjust-batches', [StockController::class, 'adjustBatches']);
     Route::get('stocks/alerts/low-stock', [StockController::class, 'getLowStock']);
+    Route::get('stocks/adjustment-report', [StockController::class, 'getAdjustmentReport']);
     Route::get('stocks/branch/{branch_id}', [StockController::class, 'getStockByBranch']);
     Route::get('stocks/product/{product_id}', [StockController::class, 'getStockByProduct']);
     Route::post('stocks/transfer', [StockController::class, 'transferStock']);
@@ -70,9 +71,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('subcategories', SubCategoryController::class);
     Route::apiResource('orders', OrderController::class);
     Route::apiResource('stores', StoreController::class);
-        Route::apiResource('banks', BankController::class);
-        Route::apiResource('purchases', PurchaseController::class);
-        Route::get('purchases/product/{product_id}', [PurchaseController::class, 'getProductHistory']);
+    Route::apiResource('banks', BankController::class);
+    Route::get('purchases/next-id', [PurchaseController::class, 'getNextPurchaseId']);
+    Route::apiResource('purchases', PurchaseController::class);
+    Route::get('purchases/product/{product_id}', [PurchaseController::class, 'getProductHistory']);
 
         // Settings Routes
         Route::get('/settings', [SettingController::class, 'index']);

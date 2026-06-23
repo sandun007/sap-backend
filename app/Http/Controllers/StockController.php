@@ -1179,4 +1179,67 @@ class StockController extends Controller
             ], 500);
         }
     }
+
+    public function getAdjustmentReport(Request $request)
+    {
+        try {
+            $fromDate = $request->query('from_date');
+            $toDate = $request->query('to_date');
+
+            $query = StockTransaction::with(['product', 'branch'])
+                ->where('transaction_type', 'adjustment');
+
+            if ($fromDate) {
+                $query->whereDate('created_at', '>=', $fromDate);
+            }
+
+            if ($toDate) {
+                $query->whereDate('created_at', '<=', $toDate);
+            }
+
+            $transactions = $query->orderBy('created_at', 'desc')->get();
+
+            $reportData = $transactions->map(function ($t) {
+                $grnNo = 'N/A';
+                if ($t->reference_number) {
+                    $grnNo = $t->reference_number;
+                } else {
+                    preg_match('/\[GRN:\s*([A-Za-z0-9-]+)\]/i', $t->notes, $matches);
+                    if (!empty($matches[1])) {
+                        $grnNo = $matches[1];
+                    } else {
+                        preg_match('/GRN:\s*([A-Za-z0-9-]+)/i', $t->notes, $matches2);
+                        if (!empty($matches2[1])) {
+                            $grnNo = $matches2[1];
+                        }
+                    }
+                }
+
+                return [
+                    'transaction_id' => $t->transaction_id,
+                    'created_at' => $t->created_at->toIso8601String(),
+                    'grn_no' => $grnNo,
+                    'product_name' => $t->product_name ?? ($t->product->product_name ?? 'N/A'),
+                    'cost_price' => $t->product->cost_price ?? 0.00,
+                    'retail_price' => $t->product->price ?? 0.00,
+                    'previous_quantity' => $t->quantity_before,
+                    'discrepancy' => $t->quantity_changed,
+                    'new_quantity' => $t->quantity_after,
+                    'unit' => $t->product->unit ?? 'pcs',
+                    'notes' => $t->notes,
+                    'branch_name' => $t->branch->branch_name ?? 'N/A',
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $reportData
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate stock adjustment report: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
