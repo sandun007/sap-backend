@@ -660,10 +660,22 @@ class StockController extends Controller
                 ];
             });
 
+            // Calculate current stock level for the selected product and branch
+            $currentStock = 0;
+            if ($branchId && $productId) {
+                $stockRecord = Stock::where('branch_id', $branchId)
+                                    ->where('product_id', $productId)
+                                    ->first();
+                if ($stockRecord) {
+                    $currentStock = $stockRecord->quantity;
+                }
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Bin card data retrieved successfully',
                 'data' => $formattedData,
+                'current_stock' => $currentStock,
                 'meta' => [
                     'current_page' => $transactions->currentPage(),
                     'last_page' => $transactions->lastPage(),
