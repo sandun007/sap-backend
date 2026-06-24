@@ -693,5 +693,67 @@ class DatabaseSeeder extends Seeder
                 $invIndex++;
             }
         }
+
+        // 19. Seed Stock Adjustments (for Stock Adjustment Report)
+        $adjustmentNotes = [
+            'Physical count discrepancy resolved',
+            'Damaged packaging - stock removed',
+            'Found extra stock during audit',
+            'Expired items discarded',
+            'Data entry error correction',
+            'Returned by delivery agent due to slight damage',
+            'System syncing discrepancy adjustment'
+        ];
+
+        // Create 20 random stock adjustments
+        for ($k = 1; $k <= 20; $k++) {
+            $stk = $stocks[array_rand($stocks)];
+            $quantityBefore = $stk->quantity;
+            
+            // Random discrepancy (positive or negative) between -10 and 15, but not 0
+            $discrepancy = 0;
+            while ($discrepancy === 0) {
+                $discrepancy = rand(-10, 15);
+            }
+            
+            // Avoid negative stock quantities
+            if ($quantityBefore + $discrepancy < 0) {
+                $discrepancy = rand(1, 10);
+            }
+            
+            $quantityAfter = $quantityBefore + $discrepancy;
+            
+            // Update stock quantity to reflect adjustment
+            $stk->update([
+                'quantity' => $quantityAfter
+            ]);
+
+            // Pick a random GRN number for batch adjustments or a normal note
+            $note = $adjustmentNotes[array_rand($adjustmentNotes)];
+            if ($k % 2 === 0) {
+                $randomGrn = 'GRN-2026-' . str_pad(rand(1, 10), 4, '0', STR_PAD_LEFT);
+                $note = "Batch Adj [GRN: {$randomGrn}]: {$note}";
+            }
+
+            $adjDate = Carbon::now()->subDays(rand(0, 25))->subHours(rand(1, 23));
+
+            StockTransaction::create([
+                'stock_id' => $stk->stock_id,
+                'product_id' => $stk->product_id,
+                'branch_id' => $stk->branch_id,
+                'brand_id' => $stk->brand_id,
+                'category_id' => $stk->category_id,
+                'subcategory_id' => $stk->subcategory_id,
+                'product_name' => $stk->product_name,
+                'transaction_type' => 'adjustment',
+                'quantity_before' => $quantityBefore,
+                'quantity_changed' => $discrepancy,
+                'quantity_after' => $quantityAfter,
+                'notes' => $note,
+                'created_by' => $admin->id,
+                'created_at' => $adjDate,
+                'updated_at' => $adjDate
+            ]);
+        }
     }
 }
