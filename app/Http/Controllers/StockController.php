@@ -625,9 +625,20 @@ class StockController extends Controller
                 $type = strtoupper($t->transaction_type);
                 $notes = strtoupper($t->notes);
                 $finalNotes = $t->notes;
+                $refNo = $t->reference_number;
                 
-                // Detect Special Types from notes
-                if (str_contains($notes, 'TRANSFER')) {
+                // Detect Special Types from notes/transaction_type
+                if (strtolower($t->transaction_type) === 'adjustment') {
+                    $type = ($t->quantity_changed > 0) ? 'ADJUSTMENT_IN' : 'ADJUSTMENT_OUT';
+                    // Extract the GRN reference embedded in batch-adjustment notes, e.g.
+                    // "Batch Adj [GRN: GRN-460758-SEVX]: reason"  →  refNo = GRN-460758-SEVX
+                    if (!$refNo) {
+                        preg_match('/\[GRN:\s*([A-Za-z0-9-]+)\]/i', $t->notes, $adjMatches);
+                        if (!empty($adjMatches[1])) {
+                            $refNo = $adjMatches[1];
+                        }
+                    }
+                } elseif (str_contains($notes, 'TRANSFER')) {
                     $type = (strtoupper($t->transaction_type) === 'IN') ? 'TRANSFER_IN' : 'TRANSFER_OUT';
                 } elseif (str_contains($notes, 'RETURN') && str_contains($notes, 'PURCHASE')) {
                     $type = 'PURCHASE_RETURN';
@@ -638,8 +649,11 @@ class StockController extends Controller
                     if (!str_contains($notes, 'SUPPLIER')) {
                         preg_match('/GRN:\s*([A-Za-z0-9-]+)/i', $t->notes, $matches);
                         $pid = $t->reference_number ?? ($matches[1] ?? null);
-                        if ($pid && isset($purchaseMap[$pid]) && $purchaseMap[$pid]->supplier) {
-                            $finalNotes .= " from Supplier [{$purchaseMap[$pid]->supplier->supplier_name}]";
+                        if ($pid) {
+                            $refNo = $pid;
+                            if (isset($purchaseMap[$pid]) && $purchaseMap[$pid]->supplier) {
+                                $finalNotes .= " from Supplier [{$purchaseMap[$pid]->supplier->supplier_name}]";
+                            }
                         }
                     }
                 } elseif ($type === 'ADJUSTMENT') {
@@ -649,11 +663,11 @@ class StockController extends Controller
                 $isDamaged = str_contains(strtoupper($t->notes), 'DAMAGED');
 
                 return [
-                    'id' => $t->id,
+                    'id' => $t->transaction_id,
                     'created_at' => $t->created_at,
                     'type' => $type,
                     'quantity' => abs($t->quantity_changed),
-                    'reference_no' => $t->reference_number ?? ($matches[1] ?? null),
+                    'reference_no' => $refNo ?? ($matches[1] ?? 'N/A'),
                     'notes' => $finalNotes,
                     'is_damaged' => $isDamaged,
                     'user' => $t->creator ? ($t->creator->name . ' (' . ucfirst($t->creator->role) . ')') : 'System'
@@ -811,6 +825,9 @@ class StockController extends Controller
         }
     }
 
+    /**
+     * Adjust stock directly (structural stock adjustment)
+     */
     public function adjustStock(Request $request)
     {
         try {
@@ -1235,6 +1252,69 @@ class StockController extends Controller
                 'success' => false,
                 'message' => 'Failed to retrieve transaction history',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getAdjustmentReport(Request $request)
+    {
+        try {
+            $fromDate = $request->query('from_date');
+            $toDate = $request->query('to_date');
+
+            $query = StockTransaction::with(['product', 'branch'])
+                ->where('transaction_type', 'adjustment');
+
+            if ($fromDate) {
+                $query->whereDate('created_at', '>=', $fromDate);
+            }
+
+            if ($toDate) {
+                $query->whereDate('created_at', '<=', $toDate);
+            }
+
+            $transactions = $query->orderBy('created_at', 'desc')->get();
+
+            $reportData = $transactions->map(function ($t) {
+                $grnNo = 'N/A';
+                if ($t->reference_number) {
+                    $grnNo = $t->reference_number;
+                } else {
+                    preg_match('/\[GRN:\s*([A-Za-z0-9-]+)\]/i', $t->notes, $matches);
+                    if (!empty($matches[1])) {
+                        $grnNo = $matches[1];
+                    } else {
+                        preg_match('/GRN:\s*([A-Za-z0-9-]+)/i', $t->notes, $matches2);
+                        if (!empty($matches2[1])) {
+                            $grnNo = $matches2[1];
+                        }
+                    }
+                }
+
+                return [
+                    'transaction_id' => $t->transaction_id,
+                    'created_at' => $t->created_at->toIso8601String(),
+                    'grn_no' => $grnNo,
+                    'product_name' => $t->product_name ?? ($t->product->product_name ?? 'N/A'),
+                    'cost_price' => $t->product->cost_price ?? 0.00,
+                    'retail_price' => $t->product->price ?? 0.00,
+                    'previous_quantity' => $t->quantity_before,
+                    'discrepancy' => $t->quantity_changed,
+                    'new_quantity' => $t->quantity_after,
+                    'unit' => $t->product->unit ?? 'pcs',
+                    'notes' => $t->notes,
+                    'branch_name' => $t->branch->branch_name ?? 'N/A',
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $reportData
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate stock adjustment report: ' . $e->getMessage()
             ], 500);
         }
     }

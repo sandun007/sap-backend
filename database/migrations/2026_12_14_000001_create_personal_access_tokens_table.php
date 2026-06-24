@@ -9,7 +9,8 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+   
+      public function up(): void
     {
         if (!Schema::hasTable('personal_access_tokens')) {
             Schema::create('personal_access_tokens', function (Blueprint $table) {
@@ -24,6 +25,7 @@ return new class extends Migration
             });
         }
     }
+
 
     /**
      * Reverse the migrations.
