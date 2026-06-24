@@ -26,6 +26,7 @@ class Product extends Model
         'weight',
         'dimensions',
         'supplier_id',
+        'minimum_stock_level',
     ];
 
     public function brand()

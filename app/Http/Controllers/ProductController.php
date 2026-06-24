@@ -81,6 +81,7 @@ class ProductController extends Controller
             'weight' => 'nullable|string|max:255',
             'dimensions' => 'nullable|string|max:255',
             'supplier_id' => 'nullable|exists:suppliers,supplier_id',
+            'minimum_stock_level' => 'nullable|integer|min:0',
         ]);
 
         $data['user_id'] = $userid;
@@ -159,6 +160,7 @@ class ProductController extends Controller
                 'weight' => 'nullable|string|max:255',
                 'dimensions' => 'nullable|string|max:255',
                 'supplier_id' => 'nullable|exists:suppliers,supplier_id',
+                'minimum_stock_level' => 'nullable|integer|min:0',
             ]);
 
             $product->update($data);
