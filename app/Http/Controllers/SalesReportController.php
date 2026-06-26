@@ -105,39 +105,63 @@ class SalesReportController extends Controller
 
             } elseif ($groupBy === 'item') {
                 if (!$productId) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Product ID is required for item-wise report.'
-                    ], 400);
+                    // Group invoice items by product to show ALL products by default
+                    $items = InvoiceItem::join('invoices', 'invoice_items.invoice_id', '=', 'invoices.invoice_id')
+                        ->join('products', 'invoice_items.product_id', '=', 'products.product_id')
+                        ->select(
+                            'products.product_id',
+                            'products.product_code',
+                            'products.product_name',
+                            'products.unit_price as price',
+                            DB::raw('SUM(invoice_items.qty) as qty'),
+                            DB::raw('SUM(invoice_items.qty * invoice_items.price) as total'),
+                            DB::raw('SUM(invoice_items.qty * (invoice_items.price - products.cost_price)) as profit')
+                        )
+                        ->whereBetween('invoices.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+                        ->groupBy('products.product_id', 'products.product_code', 'products.product_name', 'products.unit_price')
+                        ->orderBy('total', 'desc')
+                        ->get();
+
+                    $reportData = $items->map(function ($item) {
+                        return [
+                            'product_id' => $item->product_id,
+                            'product_code' => $item->product_code,
+                            'product_name' => $item->product_name,
+                            'qty' => (int)$item->qty,
+                            'price' => (float)$item->price,
+                            'total' => (float)$item->total,
+                            'profit' => (float)$item->profit,
+                        ];
+                    });
+                } else {
+                    $product = Product::findOrFail($productId);
+                    $costPrice = (float)($product->cost_price ?? 0);
+
+                    // Fetch invoice items for this product
+                    $items = InvoiceItem::with(['invoice'])
+                        ->where('product_id', $productId)
+                        ->whereHas('invoice', function ($q) use ($startDate, $endDate) {
+                            $q->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+                        })
+                        ->get();
+
+                    // Sort by invoice created_at desc
+                    $items = $items->sortByDesc(function ($item) {
+                        return $item->invoice->created_at;
+                    });
+
+                    $reportData = $items->map(function ($item) use ($costPrice) {
+                        $profit = $item->qty * ($item->price - $costPrice);
+                        return [
+                            'date' => $item->invoice->created_at->format('Y-m-d H:i:s'),
+                            'invoice_number' => $item->invoice->invoice_number,
+                            'qty' => $item->qty,
+                            'price' => (float)$item->price,
+                            'total' => (float)$item->total,
+                            'profit' => (float)$profit,
+                        ];
+                    })->values();
                 }
-
-                $product = Product::findOrFail($productId);
-                $costPrice = (float)($product->cost_price ?? 0);
-
-                // Fetch invoice items for this product
-                $items = InvoiceItem::with(['invoice'])
-                    ->where('product_id', $productId)
-                    ->whereHas('invoice', function ($q) use ($startDate, $endDate) {
-                        $q->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
-                    })
-                    ->get();
-
-                // Sort by invoice created_at desc
-                $items = $items->sortByDesc(function ($item) {
-                    return $item->invoice->created_at;
-                });
-
-                $reportData = $items->map(function ($item) use ($costPrice) {
-                    $profit = $item->qty * ($item->price - $costPrice);
-                    return [
-                        'date' => $item->invoice->created_at->format('Y-m-d H:i:s'),
-                        'invoice_number' => $item->invoice->invoice_number,
-                        'qty' => $item->qty,
-                        'price' => (float)$item->price,
-                        'total' => (float)$item->total,
-                        'profit' => (float)$profit,
-                    ];
-                })->values();
             }
 
             return response()->json([
