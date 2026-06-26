@@ -72,6 +72,24 @@ class ProfitReportController extends Controller
             // Net Profit = Gross Profit - Total Losses + Supplier Claims
             $netProfit = $grossProfit - $totalLosses + $supplierClaims;
 
+            // All-Time Cumulative Net Profit (since first sale till now)
+            $allTimeSales = (float)Invoice::sum('net_total');
+            $allTimeCOGS = (float)InvoiceItem::join('products', 'invoice_items.product_id', '=', 'products.product_id')
+                ->sum(DB::raw('invoice_items.qty * products.cost_price'));
+            $allTimeGrossProfit = $allTimeSales - $allTimeCOGS;
+            $allTimeRefunds = (float)SalesReturn::sum('refund_amount');
+            $allTimeDamagedReturnsLoss = (float)SalesReturnItem::join('products', 'sales_return_items.product_id', '=', 'products.product_id')
+                ->where('sales_return_items.condition', 'damaged')
+                ->sum(DB::raw('sales_return_items.quantity * products.cost_price'));
+            $allTimeAdjustmentLoss = (float)StockTransaction::join('products', 'stock_transactions.product_id', '=', 'products.product_id')
+                ->where('stock_transactions.transaction_type', 'adjustment')
+                ->where('stock_transactions.quantity_changed', '<', 0)
+                ->sum(DB::raw('ABS(stock_transactions.quantity_changed) * products.cost_price'));
+            $allTimeSupplierClaims = (float)PurchaseReturn::sum('total_amount');
+            
+            $allTimeLosses = $allTimeRefunds + $allTimeDamagedReturnsLoss + $allTimeAdjustmentLoss;
+            $allTimeNetProfit = $allTimeGrossProfit - $allTimeLosses + $allTimeSupplierClaims;
+
             // --- 2. Grouped Details Calculations ---
             $reportData = [];
 
@@ -276,6 +294,7 @@ class ProfitReportController extends Controller
                     'supplier_claims' => $supplierClaims,
                     'total_losses' => $totalLosses,
                     'net_profit' => $netProfit,
+                    'all_time_net_profit' => $allTimeNetProfit,
                     'start_date' => $startDate,
                     'end_date' => $endDate,
                 ],
