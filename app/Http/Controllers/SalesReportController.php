@@ -112,13 +112,13 @@ class SalesReportController extends Controller
                             'products.product_id',
                             'products.product_code',
                             'products.product_name',
-                            'products.unit_price as price',
+                            'products.price as price',
                             DB::raw('SUM(invoice_items.qty) as qty'),
                             DB::raw('SUM(invoice_items.qty * invoice_items.price) as total'),
                             DB::raw('SUM(invoice_items.qty * (invoice_items.price - products.cost_price)) as profit')
                         )
                         ->whereBetween('invoices.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-                        ->groupBy('products.product_id', 'products.product_code', 'products.product_name', 'products.unit_price')
+                        ->groupBy('products.product_id', 'products.product_code', 'products.product_name', 'products.price')
                         ->orderBy('total', 'desc')
                         ->get();
 
