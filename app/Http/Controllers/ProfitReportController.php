@@ -224,21 +224,36 @@ class ProfitReportController extends Controller
                     ->get()
                     ->pluck('adj_loss', 'product_id');
 
-                foreach ($productSales as $row) {
-                    $pId = $row->product_id;
-                    $sales = (float)$row->sales_val;
-                    $cogs = (float)$row->cogs_val;
-                    $damagedLoss = (float)($productDamagedLosses[$pId] ?? 0);
-                    $adjLoss = (float)($productAdjLosses[$pId] ?? 0);
+                $productIdsWithSales = $productSales->pluck('product_id')->toArray();
+                $productIdsWithDamaged = array_keys($productDamagedLosses->toArray());
+                $productIdsWithAdj = array_keys($productAdjLosses->toArray());
+
+                $allProductIds = array_unique(array_merge($productIdsWithSales, $productIdsWithDamaged, $productIdsWithAdj));
+                $allProducts = Product::whereIn('product_id', $allProductIds)->get()->keyBy('product_id');
+                $salesIndexed = $productSales->keyBy('product_id');
+
+                foreach ($allProductIds as $pId) {
+                    $product = $allProducts->get($pId);
+                    if (!$product) {
+                        continue;
+                    }
+
+                    $salesRow = $salesIndexed->get($pId);
+                    $qtySold = $salesRow ? (int)$salesRow->qty_sold : 0;
+                    $sales = $salesRow ? (float)$salesRow->sales_val : 0.0;
+                    $cogs = $salesRow ? (float)$salesRow->cogs_val : 0.0;
+
+                    $damagedLoss = (float)($productDamagedLosses[$pId] ?? 0.0);
+                    $adjLoss = (float)($productAdjLosses[$pId] ?? 0.0);
 
                     $gross = $sales - $cogs;
                     $net = $gross - ($damagedLoss + $adjLoss);
-                    $margin = $sales > 0 ? ($net / $sales) * 100 : 0;
+                    $margin = $sales > 0 ? ($net / $sales) * 100 : 0.0;
 
                     $reportData[] = [
-                        'product_code' => $row->product_code,
-                        'product_name' => $row->product_name,
-                        'qty_sold' => (int)$row->qty_sold,
+                        'product_code' => $product->product_code,
+                        'product_name' => $product->product_name,
+                        'qty_sold' => $qtySold,
                         'sales' => $sales,
                         'cogs' => $cogs,
                         'gross_profit' => $gross,

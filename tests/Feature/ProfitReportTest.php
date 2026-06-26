@@ -215,4 +215,76 @@ class ProfitReportTest extends TestCase
         $this->assertEquals(30, $response->json('data.0.supplier_claims'));
         $this->assertEquals(-170, $response->json('data.0.net_profit'));
     }
+
+    public function test_profit_report_group_by_product(): void
+    {
+        Sanctum::actingAs($this->user);
+
+        // Create Invoice (Sales = 200.00, COGS = 140.00, Gross Profit = 60.00)
+        $invoice = new Invoice([
+            'invoice_number' => 'INV_' . uniqid(),
+            'branch_id' => $this->branch->branch_id,
+            'net_total' => 200.00,
+            'payment_method' => 'cash',
+            'status' => 'paid',
+        ]);
+        $invoice->created_at = $this->testDate;
+        $invoice->save();
+
+        $item = new InvoiceItem([
+            'invoice_id' => $invoice->invoice_id,
+            'product_id' => $this->product->product_id,
+            'product_name' => $this->product->product_name,
+            'product_code' => $this->product->product_code,
+            'price' => 100.00,
+            'qty' => 2,
+            'total' => 200.00,
+        ]);
+        $item->created_at = $this->testDate;
+        $item->save();
+
+        // Create Sales Return Item - Damaged (Loss = 1 * 70.00 = 70.00)
+        $salesReturn = new SalesReturn([
+            'return_number' => 'RET_' . uniqid(),
+            'invoice_id' => $invoice->invoice_id,
+            'invoice_number' => $invoice->invoice_number,
+            'branch_id' => $this->branch->branch_id,
+            'refund_amount' => 50.00,
+            'refund_method' => 'cash',
+            'reason' => 'Test refund',
+        ]);
+        $salesReturn->created_at = $this->testDate;
+        $salesReturn->save();
+
+        $returnItem = new SalesReturnItem([
+            'return_id' => $salesReturn->return_id,
+            'product_id' => $this->product->product_id,
+            'product_name' => $this->product->product_name,
+            'product_code' => $this->product->product_code,
+            'quantity' => 1,
+            'price' => 100.00,
+            'total' => 100.00,
+            'condition' => 'damaged',
+        ]);
+        $returnItem->created_at = $this->testDate;
+        $returnItem->save();
+
+        $startDate = '2030-06-01';
+        $endDate = '2030-06-30';
+
+        $response = $this->getJson("/api/reports/profit?start_date={$startDate}&end_date={$endDate}&group_by=product");
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('success', true);
+
+        // Group by Product checks
+        $response->assertJsonCount(1, 'data');
+        $this->assertEquals($this->product->product_code, $response->json('data.0.product_code'));
+        $this->assertEquals($this->product->product_name, $response->json('data.0.product_name'));
+        $this->assertEquals(2, $response->json('data.0.qty_sold'));
+        $this->assertEquals(200, $response->json('data.0.sales'));
+        $this->assertEquals(140, $response->json('data.0.cogs'));
+        $this->assertEquals(70, $response->json('data.0.write_offs'));
+        $this->assertEquals(-10, $response->json('data.0.net_profit')); // gross (60) - losses (70) = -10
+    }
 }

@@ -451,8 +451,17 @@ class DatabaseSeeder extends Seeder
         foreach ($productsData as $item) {
             $prodName = $item['name'];
             $brandName = $item['brand'];
-            $costPrice = $item['cost'];
-            $sellingPrice = $item['price'];
+            $origPrice = $item['price'];
+            if ($origPrice >= 50000) {
+                $sellingPrice = 10000.00;
+                $costPrice = 7000.00;
+            } elseif ($origPrice >= 5000) {
+                $sellingPrice = 1000.00;
+                $costPrice = 700.00;
+            } else {
+                $sellingPrice = 100.00;
+                $costPrice = 70.00;
+            }
             $subName = $item['subcategory'];
 
             $subModel = $subcategories[$subName];
