@@ -24,6 +24,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\SalesReportController;
+use App\Http\Controllers\ProfitReportController;
 
 
 
@@ -94,6 +95,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('sales-returns/verify-credit', [SalesReturnController::class, 'verifyCreditNote']);
     Route::apiResource('sales-returns', SalesReturnController::class)->only(['index', 'show']);
     Route::get('reports/sales', [SalesReportController::class, 'getSalesReport']);
+    Route::get('reports/profit', [ProfitReportController::class, 'getProfitReport']);
 
         // Settings Routes
         Route::get('/settings', [SettingController::class, 'index']);
