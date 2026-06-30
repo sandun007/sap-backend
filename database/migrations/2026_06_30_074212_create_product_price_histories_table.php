@@ -24,6 +24,21 @@ return new class extends Migration
             $table->foreign('product_id')->references('product_id')->on('products')->onDelete('cascade');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
+
+        // Seed initial history entries for existing products
+        $products = \App\Models\Product::all();
+        foreach ($products as $product) {
+            \App\Models\ProductPriceHistory::create([
+                'product_id' => $product->product_id,
+                'old_cost_price' => 0.00,
+                'new_cost_price' => (float)($product->cost_price ?? 0),
+                'old_selling_price' => 0.00,
+                'new_selling_price' => (float)$product->price,
+                'user_id' => $product->user_id ?? null,
+                'created_at' => $product->created_at ?? now(),
+                'updated_at' => $product->updated_at ?? now()
+            ]);
+        }
     }
 
     /**
