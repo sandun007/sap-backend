@@ -896,5 +896,124 @@ class DatabaseSeeder extends Seeder
 
             $macbookStock->update(['quantity' => 109]);
         }
+
+        // 21. Explicitly seed additional movement history for testing iPhone 15 Pro (Product ID 1, Branch ID 1)
+        $iphoneStock = \App\Models\Stock::where('product_id', 1)->where('branch_id', 1)->first();
+        if ($iphoneStock) {
+            // Re-establish stock at initial level 44
+            $iphoneStock->update(['quantity' => 44]);
+            
+            // Delete any existing transactions to avoid duplicates
+            StockTransaction::where('product_id', 1)->where('branch_id', 1)->delete();
+            
+            // Initial
+            StockTransaction::create([
+                'stock_id' => $iphoneStock->stock_id,
+                'product_id' => 1,
+                'branch_id' => 1,
+                'brand_id' => $iphoneStock->brand_id,
+                'category_id' => $iphoneStock->category_id,
+                'subcategory_id' => $iphoneStock->subcategory_id,
+                'product_name' => $iphoneStock->product_name,
+                'transaction_type' => 'initial',
+                'quantity_before' => 0,
+                'quantity_changed' => 44,
+                'quantity_after' => 44,
+                'reference_number' => 'INIT-STK-' . $iphoneStock->stock_id,
+                'notes' => 'Initial stock setup via seeder',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now()->subDays(6),
+                'updated_at' => Carbon::now()->subDays(6)
+            ]);
+
+            // Sale (Invoice)
+            StockTransaction::create([
+                'stock_id' => $iphoneStock->stock_id,
+                'product_id' => 1,
+                'branch_id' => 1,
+                'brand_id' => $iphoneStock->brand_id,
+                'category_id' => $iphoneStock->category_id,
+                'subcategory_id' => $iphoneStock->subcategory_id,
+                'product_name' => $iphoneStock->product_name,
+                'transaction_type' => 'out',
+                'quantity_before' => 44,
+                'quantity_changed' => -2,
+                'quantity_after' => 42,
+                'reference_number' => 'INV-2026-0002',
+                'notes' => 'Sold via invoice INV-2026-0002',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now()->subDays(4),
+                'updated_at' => Carbon::now()->subDays(4)
+            ]);
+
+            // Clean existing price histories to avoid duplicates
+            \App\Models\ProductPriceHistory::where('product_id', 1)->delete();
+            
+            // Initial price history record
+            \App\Models\ProductPriceHistory::create([
+                'product_id' => 1,
+                'old_cost_price' => 0.00,
+                'new_cost_price' => 7000.00,
+                'old_selling_price' => 0.00,
+                'new_selling_price' => 10000.00,
+                'user_id' => $admin->id,
+                'created_at' => Carbon::now()->subDays(5),
+                'updated_at' => Carbon::now()->subDays(5)
+            ]);
+
+            // Price change history record (this will show in red on Bin Card since old_selling > 0)
+            \App\Models\ProductPriceHistory::create([
+                'product_id' => 1,
+                'old_cost_price' => 7000.00,
+                'new_cost_price' => 7200.00,
+                'old_selling_price' => 10000.00,
+                'new_selling_price' => 11500.00,
+                'user_id' => $admin->id,
+                'created_at' => Carbon::now()->subDays(3),
+                'updated_at' => Carbon::now()->subDays(3)
+            ]);
+
+            // Stock Adjustment
+            StockTransaction::create([
+                'stock_id' => $iphoneStock->stock_id,
+                'product_id' => 1,
+                'branch_id' => 1,
+                'brand_id' => $iphoneStock->brand_id,
+                'category_id' => $iphoneStock->category_id,
+                'subcategory_id' => $iphoneStock->subcategory_id,
+                'product_name' => $iphoneStock->product_name,
+                'transaction_type' => 'adjustment',
+                'quantity_before' => 42,
+                'quantity_changed' => -1,
+                'quantity_after' => 41,
+                'reference_number' => 'ADJ-2026-0043',
+                'notes' => 'Damaged inventory written off',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now()->subDays(2),
+                'updated_at' => Carbon::now()->subDays(2)
+            ]);
+
+            // Purchase (GRN)
+            StockTransaction::create([
+                'stock_id' => $iphoneStock->stock_id,
+                'product_id' => 1,
+                'branch_id' => 1,
+                'brand_id' => $iphoneStock->brand_id,
+                'category_id' => $iphoneStock->category_id,
+                'subcategory_id' => $iphoneStock->subcategory_id,
+                'product_name' => $iphoneStock->product_name,
+                'transaction_type' => 'in',
+                'quantity_before' => 41,
+                'quantity_changed' => 10,
+                'quantity_after' => 51,
+                'reference_number' => 'GRN-2026-0096',
+                'notes' => 'Purchase order stock received via GRN-2026-0096',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ]);
+
+            $iphoneStock->update(['quantity' => 51]);
+        }
     }
 }
