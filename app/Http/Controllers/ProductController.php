@@ -99,6 +99,16 @@ class ProductController extends Controller
 
         $product = Product::create($data);
 
+        // Log initial price history
+        \App\Models\ProductPriceHistory::create([
+            'product_id' => $product->product_id,
+            'old_cost_price' => 0.00,
+            'new_cost_price' => (float)($product->cost_price ?? 0),
+            'old_selling_price' => 0.00,
+            'new_selling_price' => (float)$product->price,
+            'user_id' => $userid
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => 'Product created successfully',
@@ -174,7 +184,25 @@ class ProductController extends Controller
                 'minimum_stock_level' => 'nullable|integer|min:0',
             ]);
 
+            $oldCost = (float)$product->cost_price;
+            $oldSelling = (float)$product->price;
+
             $product->update($data);
+
+            $newCost = (float)$product->cost_price;
+            $newSelling = (float)$product->price;
+
+            // Log if prices changed
+            if ($oldCost !== $newCost || $oldSelling !== $newSelling) {
+                \App\Models\ProductPriceHistory::create([
+                    'product_id' => $product->product_id,
+                    'old_cost_price' => $oldCost,
+                    'new_cost_price' => $newCost,
+                    'old_selling_price' => $oldSelling,
+                    'new_selling_price' => $newSelling,
+                    'user_id' => auth()->user()->id
+                ]);
+            }
             
             return response()->json([
                 'success' => true,

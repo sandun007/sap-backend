@@ -25,6 +25,7 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\PurchaseReturnController;
 use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\ProfitReportController;
+use App\Http\Controllers\ProductPriceHistoryController;
 
 
 
@@ -96,6 +97,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::apiResource('sales-returns', SalesReturnController::class)->only(['index', 'show']);
     Route::get('reports/sales', [SalesReportController::class, 'getSalesReport']);
     Route::get('reports/profit', [ProfitReportController::class, 'getProfitReport']);
+
+    // Price Control Routes
+    Route::post('price-control/update', [ProductPriceHistoryController::class, 'updatePrice']);
+    Route::get('price-control/history', [ProductPriceHistoryController::class, 'getHistory']);
 
         // Settings Routes
         Route::get('/settings', [SettingController::class, 'index']);
