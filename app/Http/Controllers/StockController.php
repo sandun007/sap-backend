@@ -670,7 +670,7 @@ class StockController extends Controller
                     'reference_no' => $refNo ?? ($matches[1] ?? 'N/A'),
                     'notes' => $finalNotes,
                     'is_damaged' => $isDamaged,
-                    'user' => $t->creator ? ($t->creator->name . ' (' . ucfirst($t->creator->role) . ')') : 'System'
+                    'user' => $t->creator ? $t->creator->name : 'System'
                 ];
             });
 

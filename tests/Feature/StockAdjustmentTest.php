@@ -339,7 +339,7 @@ class StockAdjustmentTest extends TestCase
         $this->assertNotNull($adjustmentItem);
         $this->assertEquals(10, $adjustmentItem['quantity']);
         $this->assertStringContainsString('abc', $adjustmentItem['notes']);
-        $this->assertEquals($this->user->name . ' (Operator)', $adjustmentItem['user']);
+        $this->assertEquals($this->user->name, $adjustmentItem['user']);
 
         // Verify transformed output fields on the transfer item
         $transferItem = collect($data)->firstWhere('type', 'TRANSFER_OUT');
