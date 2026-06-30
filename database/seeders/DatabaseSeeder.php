@@ -764,5 +764,137 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => $adjDate
             ]);
         }
+
+        // 20. Explicitly seed additional movement history for testing MacBook Air M3 (Product ID 5, Branch ID 1)
+        $macbookStock = \App\Models\Stock::where('product_id', 5)->where('branch_id', 1)->first();
+        if ($macbookStock) {
+            // Re-establish stock at initial level 105
+            $macbookStock->update(['quantity' => 105]);
+            
+            // Delete any existing transactions to avoid duplicates
+            StockTransaction::where('product_id', 5)->where('branch_id', 1)->delete();
+            
+            // Initial
+            StockTransaction::create([
+                'stock_id' => $macbookStock->stock_id,
+                'product_id' => 5,
+                'branch_id' => 1,
+                'brand_id' => $macbookStock->brand_id,
+                'category_id' => $macbookStock->category_id,
+                'subcategory_id' => $macbookStock->subcategory_id,
+                'product_name' => $macbookStock->product_name,
+                'transaction_type' => 'initial',
+                'quantity_before' => 0,
+                'quantity_changed' => 105,
+                'quantity_after' => 105,
+                'reference_number' => 'INIT-STK-' . $macbookStock->stock_id,
+                'notes' => 'Initial stock setup via seeder',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now()->subDays(6),
+                'updated_at' => Carbon::now()->subDays(6)
+            ]);
+
+            // Sale (Invoice)
+            StockTransaction::create([
+                'stock_id' => $macbookStock->stock_id,
+                'product_id' => 5,
+                'branch_id' => 1,
+                'brand_id' => $macbookStock->brand_id,
+                'category_id' => $macbookStock->category_id,
+                'subcategory_id' => $macbookStock->subcategory_id,
+                'product_name' => $macbookStock->product_name,
+                'transaction_type' => 'out',
+                'quantity_before' => 105,
+                'quantity_changed' => -5,
+                'quantity_after' => 100,
+                'reference_number' => 'INV-2026-0001',
+                'notes' => 'Sold via invoice INV-2026-0001',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now()->subDays(4),
+                'updated_at' => Carbon::now()->subDays(4)
+            ]);
+
+            // Stock Adjustment
+            StockTransaction::create([
+                'stock_id' => $macbookStock->stock_id,
+                'product_id' => 5,
+                'branch_id' => 1,
+                'brand_id' => $macbookStock->brand_id,
+                'category_id' => $macbookStock->category_id,
+                'subcategory_id' => $macbookStock->subcategory_id,
+                'product_name' => $macbookStock->product_name,
+                'transaction_type' => 'adjustment',
+                'quantity_before' => 100,
+                'quantity_changed' => -2,
+                'quantity_after' => 98,
+                'reference_number' => 'ADJ-2026-0042',
+                'notes' => 'Damaged inventory written off',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now()->subDays(3),
+                'updated_at' => Carbon::now()->subDays(3)
+            ]);
+
+            // Return
+            StockTransaction::create([
+                'stock_id' => $macbookStock->stock_id,
+                'product_id' => 5,
+                'branch_id' => 1,
+                'brand_id' => $macbookStock->brand_id,
+                'category_id' => $macbookStock->category_id,
+                'subcategory_id' => $macbookStock->subcategory_id,
+                'product_name' => $macbookStock->product_name,
+                'transaction_type' => 'in',
+                'quantity_before' => 98,
+                'quantity_changed' => 1,
+                'quantity_after' => 99,
+                'reference_number' => 'RET-2026-0003',
+                'notes' => 'Returned from invoice INV-2026-0001 (Sellable)',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now()->subDays(2),
+                'updated_at' => Carbon::now()->subDays(2)
+            ]);
+
+            // Stock Transfer Out
+            StockTransaction::create([
+                'stock_id' => $macbookStock->stock_id,
+                'product_id' => 5,
+                'branch_id' => 1,
+                'brand_id' => $macbookStock->brand_id,
+                'category_id' => $macbookStock->category_id,
+                'subcategory_id' => $macbookStock->subcategory_id,
+                'product_name' => $macbookStock->product_name,
+                'transaction_type' => 'out',
+                'quantity_before' => 99,
+                'quantity_changed' => -10,
+                'quantity_after' => 89,
+                'reference_number' => 'TRF-2026-0012',
+                'notes' => 'Stock Transfer to Branch [Kandy Branch]',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now()->subDays(1),
+                'updated_at' => Carbon::now()->subDays(1)
+            ]);
+
+            // Purchase (GRN)
+            StockTransaction::create([
+                'stock_id' => $macbookStock->stock_id,
+                'product_id' => 5,
+                'branch_id' => 1,
+                'brand_id' => $macbookStock->brand_id,
+                'category_id' => $macbookStock->category_id,
+                'subcategory_id' => $macbookStock->subcategory_id,
+                'product_name' => $macbookStock->product_name,
+                'transaction_type' => 'in',
+                'quantity_before' => 89,
+                'quantity_changed' => 20,
+                'quantity_after' => 109,
+                'reference_number' => 'GRN-2026-0095',
+                'notes' => 'Purchase order stock received via GRN-2026-0095',
+                'created_by' => $admin->id,
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ]);
+
+            $macbookStock->update(['quantity' => 109]);
+        }
     }
 }
