@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
         StockTransaction::truncate();
         Stock::truncate();
         Product::truncate();
+        \App\Models\ProductPriceHistory::truncate();
         Customer::truncate();
         Bank::truncate();
         Store::truncate();
@@ -505,12 +506,83 @@ class DatabaseSeeder extends Seeder
             $prodIndex++;
         }
 
+        // Top up all brands to have at least 50 products
+        $subNames = [
+            1 => 'Smartphones', 2 => 'Laptops', 3 => 'Audio', 4 => 'Accessories', 5 => 'Smart Home',
+            6 => 'T-Shirts', 7 => 'Jeans', 8 => 'Jackets', 9 => 'Socks', 10 => 'Caps',
+            11 => 'Coffee Makers', 12 => 'Microwaves', 13 => 'Blenders', 14 => 'Toasters', 15 => 'Air Fryers',
+            16 => 'Footballs', 17 => 'Dumbbells', 18 => 'Yoga Mats', 19 => 'Water Bottles', 20 => 'Running Shoes',
+            21 => 'Notebooks', 22 => 'Pens', 23 => 'Desk Organizers', 24 => 'Staplers', 25 => 'Paper Shredders',
+        ];
+
+        DB::beginTransaction();
+
+        $allBrands = Brand::all();
+        foreach ($allBrands as $brand) {
+            $currentCount = 0;
+            foreach ($products as $p) {
+                if ((int)$p->brand_id === (int)$brand->brand_id) {
+                    $currentCount++;
+                }
+            }
+
+            $needed = 50 - $currentCount;
+            for ($i = 1; $i <= $needed; $i++) {
+                $subId = (($prodIndex - 1) % 25) + 1;
+                $subName = $subNames[$subId];
+                
+                $prodName = $this->getRealisticProductName($brand->brand_name, $subName, $i);
+                $code = 'PROD' . str_pad($prodIndex, 4, '0', STR_PAD_LEFT);
+                $barcode = '89010000' . str_pad($prodIndex, 5, '0', STR_PAD_LEFT);
+
+                $supplierModel = $suppliers[($prodIndex - 1) % 10];
+
+                $costPrice = rand(100, 5000);
+                $sellingPrice = round($costPrice * 1.3, -2); // 30% margin, rounded to nearest 100
+
+                $newProduct = Product::create([
+                    'product_name' => $prodName,
+                    'product_code' => $code,
+                    'brand_id' => $brand->brand_id,
+                    'subcategory_id' => $subId,
+                    'price' => $sellingPrice,
+                    'unit' => $prodIndex % 10 === 0 ? 'box' : ($prodIndex % 15 === 0 ? 'kg' : 'pcs'),
+                    'status' => 'active',
+                    'description' => "Premium quality $prodName from $brand->brand_name.",
+                    'user_id' => $admin->id,
+                    'barcode' => $barcode,
+                    'cost_price' => $costPrice,
+                    'weight' => rand(1, 10) . ' kg',
+                    'dimensions' => rand(5, 50) . 'x' . rand(5, 50) . 'x' . rand(5, 50) . ' cm',
+                    'supplier_id' => $supplierModel->supplier_id,
+                ]);
+
+                \App\Models\ProductPriceHistory::create([
+                    'product_id' => $newProduct->product_id,
+                    'old_cost_price' => 0.00,
+                    'new_cost_price' => $newProduct->cost_price,
+                    'old_selling_price' => 0.00,
+                    'new_selling_price' => $newProduct->price,
+                    'user_id' => $admin->id
+                ]);
+
+                $products[] = $newProduct;
+                $prodIndex++;
+            }
+        }
+
+        DB::commit();
+
         // 14. Seed Stocks
         $stocks = [];
+        $subcategoriesList = SubCategory::all()->keyBy('subcategory_id');
+
+        DB::beginTransaction();
+
         foreach ($products as $product) {
             // Seed stock at 3 branches (1, 2, 3)
             for ($branchId = 1; $branchId <= 3; $branchId++) {
-                $sub = SubCategory::find($product->subcategory_id);
+                $sub = $subcategoriesList[$product->subcategory_id];
                 $stocks[] = Stock::create([
                     'product_id' => $product->product_id,
                     'branch_id' => $branchId,
@@ -548,6 +620,8 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
         }
+
+        DB::commit();
 
         // 16. Seed Purchases (GRNs) distributed over 5 months
         $pIndex = 1;
@@ -1032,6 +1106,115 @@ class DatabaseSeeder extends Seeder
             ]);
 
             $iphoneStock->update(['quantity' => 51]);
+        }
+    }
+
+    private function getRealisticProductName($brandName, $subName, $index)
+    {
+        switch ($subName) {
+            case 'Smartphones':
+                $models = ['Galaxy S', 'Galaxy A', 'Nord', 'Redmi Note', 'Edge', 'Xperia'];
+                $model = $models[abs(crc32($brandName)) % count($models)];
+                if (strcasecmp($brandName, 'Apple') === 0) {
+                    return "iPhone " . (11 + ($index % 6)) . ($index % 2 === 0 ? " Pro" : " Max");
+                }
+                return $brandName . " " . $model . " " . ($index + 10);
+                
+            case 'Laptops':
+                $models = ['ThinkPad X1', 'Spectre x360', 'Inspiron', 'Yoga Slim', 'ZenBook', 'Predator', 'Blade'];
+                $model = $models[abs(crc32($brandName)) % count($models)];
+                if (strcasecmp($brandName, 'Apple') === 0) {
+                    return "MacBook Pro " . (13 + ($index % 3)) . "-inch M" . (($index % 3) + 1);
+                }
+                return $brandName . " " . $model . " " . ($index + 1);
+                
+            case 'Audio':
+                $models = ['Wireless Headphones', 'True Wireless Earbuds', 'Noise Cancelling Buds', 'Home Speaker', 'Bluetooth Soundbar'];
+                $model = $models[abs(crc32($brandName)) % count($models)];
+                return $brandName . " " . $model . " " . (100 + $index * 5);
+                
+            case 'Accessories':
+                $models = ['USB-C Docking Station', 'Wireless Mouse', 'Mechanical Keyboard', 'Power Bank 20K', 'High-Speed HDMI Cable'];
+                $model = $models[abs(crc32($brandName)) % count($models)];
+                return $brandName . " " . $model . " " . (200 + $index);
+                
+            case 'Smart Home':
+                $models = ['Smart Plug WiFi', 'Security Camera 4K', 'Smart Thermostat', 'Motion Sensor', 'Smart LED Bulb Pack'];
+                $model = $models[abs(crc32($brandName)) % count($models)];
+                return $brandName . " " . $model;
+                
+            case 'T-Shirts':
+                $styles = ['Dri-FIT Athletic', 'Original Classic Fit', 'Soft Cotton V-Neck', 'Crewneck Performance', 'Graphic Print'];
+                $style = $styles[abs(crc32($brandName)) % count($styles)];
+                return $brandName . " " . $style . " T-Shirt";
+                
+            case 'Jeans':
+                $cuts = ['501 Straight Fit', 'Slim Fit Denim', 'Relaxed Fit Jeans', 'Bootcut Indigo', 'Skinny Stretch Jeans'];
+                $cut = $cuts[abs(crc32($brandName)) % count($cuts)];
+                return $brandName . " " . $cut;
+                
+            case 'Jackets':
+                $types = ['Rainproof Windbreaker', 'Fleece Winter Jacket', 'Waterproof Parka', 'Casual Denim Jacket', 'Active Sports Hoodie'];
+                $type = $types[abs(crc32($brandName)) % count($types)];
+                return $brandName . " " . $type;
+                
+            case 'Socks':
+                $types = ['Cushioned Crew Socks', 'Ankle Running Socks', 'No-Show Sports Liner', 'Merino Wool Trail Socks', 'Compression Athletic Socks'];
+                $type = $types[abs(crc32($brandName)) % count($types)];
+                return $brandName . " " . $type;
+                
+            case 'Caps':
+                $types = ['Caps Hat', 'Snapback Trucker Hat', 'Sport Adjustable Visor', 'Knit Warm Beanie', 'Running Light Cap'];
+                $type = $types[abs(crc32($brandName)) % count($types)];
+                return $brandName . " " . $type;
+                
+            case 'Coffee Makers':
+                return $brandName . " Espresso Machine " . ($index + 1);
+                
+            case 'Microwaves':
+                return $brandName . " Countertop Microwave " . (500 + $index * 10);
+                
+            case 'Blenders':
+                return $brandName . " High-Speed Blender " . ($index + 1);
+                
+            case 'Toasters':
+                return $brandName . " " . (($index % 2 === 0) ? '2-Slice' : '4-Slice') . " Toaster";
+                
+            case 'Air Fryers':
+                return $brandName . " Digital Air Fryer " . ($index + 3) . "L";
+                
+            case 'Footballs':
+                return $brandName . " Match Football " . ($index + 1);
+                
+            case 'Dumbbells':
+                return $brandName . " Hex Dumbbell " . (($index % 5 + 1) * 5) . "kg";
+                
+            case 'Yoga Mats':
+                return $brandName . " Premium Yoga Mat " . (($index % 2 === 0) ? '5mm' : '6mm');
+                
+            case 'Water Bottles':
+                return $brandName . " Insulated Bottle " . (($index % 2 === 0) ? '24oz' : '32oz');
+                
+            case 'Running Shoes':
+                return $brandName . " Pro Run " . ($index + 1) . " Shoes";
+                
+            case 'Notebooks':
+                return $brandName . " A5 Hardcover Notebook";
+                
+            case 'Pens':
+                return $brandName . " Gel Pens " . (($index % 2 === 0) ? '3-Pack' : '6-Pack');
+                
+            case 'Desk Organizers':
+                return $brandName . " Office Desk Organizer";
+                
+            case 'Staplers':
+                return $brandName . " Heavy Duty Stapler";
+                
+            case 'Paper Shredders':
+                return $brandName . " Cross-Cut Shredder";
+                
+            default:
+                return $brandName . " Premium " . $subName . " Item " . $index;
         }
     }
 }
