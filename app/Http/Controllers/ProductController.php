@@ -13,13 +13,21 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Product::with(['brand', 'subcategory.category','user', 'stocks'])
-                ->withSum(['returnItems as sales_damaged_qty' => function($q) {
-                    $q->where('condition', 'damaged');
-                }], 'quantity')
-                ->withSum(['purchaseReturnItems as supplier_damaged_qty' => function($q) {
-                    $q->where('return_type', 'damaged');
-                }], 'quantity');
+            $query = Product::select([
+                'product_id', 'product_name', 'product_code', 'brand_id', 'subcategory_id',
+                'price', 'cost_price', 'unit', 'status', 'barcode', 'supplier_id', 'created_at', 'weight', 'dimensions', 'description'
+            ])->with([
+                'brand:brand_id,brand_name',
+                'subcategory:subcategory_id,subcategory_name,category_id',
+                'subcategory.category:category_id,category_name',
+                'stocks:stock_id,product_id,quantity,branch_id'
+            ])
+            ->withSum(['returnItems as sales_damaged_qty' => function($q) {
+                $q->where('condition', 'damaged');
+            }], 'quantity')
+            ->withSum(['purchaseReturnItems as supplier_damaged_qty' => function($q) {
+                $q->where('return_type', 'damaged');
+            }], 'quantity');
 
             if ($request->filled('has_transactions')) {
                 // Match any product that has EITHER a transaction record OR a stock record
