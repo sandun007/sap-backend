@@ -101,6 +101,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Price Control Routes
     Route::post('price-control/update', [ProductPriceHistoryController::class, 'updatePrice']);
     Route::get('price-control/history', [ProductPriceHistoryController::class, 'getHistory']);
+    Route::post('price-control/batch-update', [ProductPriceHistoryController::class, 'batchUpdatePrice']);
 
         // Settings Routes
         Route::get('/settings', [SettingController::class, 'index']);
