@@ -172,37 +172,17 @@ class ProductController extends Controller
                 'product_code' => 'nullable|string|max:255|unique:products,product_code,' . $product->product_id . ',product_id',
                 'brand_id' => 'nullable|exists:brands,brand_id',
                 'subcategory_id' => 'nullable|exists:sub_categories,subcategory_id',
-                'price' => 'nullable|numeric',
                 'unit' => 'nullable|string|max:50',
                 'status' => 'nullable|string',
                 'description' => 'nullable|string',
                 'barcode' => 'nullable|string|max:255',
-                'cost_price' => 'nullable|numeric',
                 'weight' => 'nullable|string|max:255',
                 'dimensions' => 'nullable|string|max:255',
                 'supplier_id' => 'nullable|exists:suppliers,supplier_id',
                 'minimum_stock_level' => 'nullable|integer|min:0',
             ]);
 
-            $oldCost = (float)$product->cost_price;
-            $oldSelling = (float)$product->price;
-
             $product->update($data);
-
-            $newCost = (float)$product->cost_price;
-            $newSelling = (float)$product->price;
-
-            // Log if prices changed
-            if ($oldCost !== $newCost || $oldSelling !== $newSelling) {
-                \App\Models\ProductPriceHistory::create([
-                    'product_id' => $product->product_id,
-                    'old_cost_price' => $oldCost,
-                    'new_cost_price' => $newCost,
-                    'old_selling_price' => $oldSelling,
-                    'new_selling_price' => $newSelling,
-                    'user_id' => auth()->user()->id
-                ]);
-            }
             
             return response()->json([
                 'success' => true,
