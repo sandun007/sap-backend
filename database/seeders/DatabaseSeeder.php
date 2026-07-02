@@ -553,7 +553,16 @@ class DatabaseSeeder extends Seeder
         $pIndex = 1;
         for ($m = 4; $m >= 0; $m--) {
             for ($i = 1; $i <= 3; $i++) {
-                $grnDate = Carbon::now()->subMonths($m)->subDays(rand(1, 28))->subHours(rand(1, 12));
+                $targetMonth = Carbon::now()->subMonths($m);
+                if ($m === 0) {
+                    $daysLimit = Carbon::now()->day;
+                    $randDay = rand(0, $daysLimit - 1);
+                    $grnDate = Carbon::now()->startOfMonth()->addDays($randDay)->subHours(rand(1, 12));
+                } else {
+                    $daysInMonth = $targetMonth->daysInMonth;
+                    $randDay = rand(0, $daysInMonth - 1);
+                    $grnDate = $targetMonth->copy()->startOfMonth()->addDays($randDay)->subHours(rand(1, 12));
+                }
                 $grnNo = 'GRN-' . $grnDate->year . '-' . str_pad($pIndex, 4, '0', STR_PAD_LEFT);
                 $supplier = $suppliers[($pIndex - 1) % 10];
                 $branch = $branches[($pIndex - 1) % 5];
@@ -652,7 +661,16 @@ class DatabaseSeeder extends Seeder
         $invIndex = 1;
         for ($m = 4; $m >= 0; $m--) {
             for ($i = 1; $i <= 16; $i++) {
-                $invDate = Carbon::now()->subMonths($m)->subDays(rand(1, 28))->subHours(rand(1, 12));
+                $targetMonth = Carbon::now()->subMonths($m);
+                if ($m === 0) {
+                    $daysLimit = Carbon::now()->day;
+                    $randDay = rand(0, $daysLimit - 1);
+                    $invDate = Carbon::now()->startOfMonth()->addDays($randDay)->subHours(rand(1, 12));
+                } else {
+                    $daysInMonth = $targetMonth->daysInMonth;
+                    $randDay = rand(0, $daysInMonth - 1);
+                    $invDate = $targetMonth->copy()->startOfMonth()->addDays($randDay)->subHours(rand(1, 12));
+                }
                 $invNo = 'INV-' . $invDate->year . '-' . str_pad($invIndex, 4, '0', STR_PAD_LEFT);
                 
                 $invoice = Invoice::create([
