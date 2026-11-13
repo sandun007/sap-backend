@@ -1,66 +1,157 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SAP / Enterprise Resource Planning (ERP) Backend System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A robust, enterprise-grade RESTful API backend built with **Laravel 10** and **PHP 8.2**, engineered for comprehensive Inventory Management, Point of Sale (POS), Supply Chain (GRN), Dynamic Pricing Control, and Multi-Branch Enterprise Operations.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Key Features & Modules
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 1. 🔐 Authentication & Access Control (RBAC)
+- Token-based API authentication powered by **Laravel Sanctum**.
+- Granular Role-Based Access Control (`admin`, `employee`, etc.).
+- Secure session control and user profile management (`/api/me`).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 2. 📊 Dynamic Dashboard & Real-Time Analytics
+- Real-time business metrics and financial summaries.
+- Low-stock warnings, purchase volume counters, and daily sales tracking.
 
-## Learning Laravel
+### 3. 📦 Product & Catalog Management
+- Hierarchical category and subcategory structures.
+- Brand and unit management with bulk Excel/CSV import capabilities.
+- Advanced product search, filtering, and dropdown helpers for responsive frontends.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 4. 📈 Inventory, Live Stock & Bin Card Ledger
+- **Multi-Branch Stock Tracking:** Monitor stock distribution across stores and branches.
+- **Bin Card Ledger:** Detailed audit trails for every inventory inflow and outflow.
+- **Batch Management & Adjustments:** Track batch-wise inventory and perform stock adjustments with automated logging.
+- **Inter-Branch Transfers:** Seamless inventory movement between registered branches and stores.
+- **Automated Alerts:** Low-stock threshold detection and adjustment reporting.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 5. 🛒 Procurement & Supply Chain (GRN)
+- Supplier management with contact directory and bulk import.
+- Purchase Order / Goods Received Notes (GRN) workflow with automated sequential ID generation.
+- **Purchase Returns:** Return defective items to suppliers with automatic stock reconciliation.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 6. 🧾 Invoicing & Sales Operations
+- Fast POS invoice creation and sequential invoice number management.
+- Real-time inventory deduction upon checkout.
+- Automated generation of Bin Card logs for each sale transaction.
 
-## Laravel Sponsors
+### 7. 🔄 Returns & Credit Note System
+- Search and verification of historical invoices for return processing.
+- Multi-mode returns: refund or store credit note generation.
+- Store credit deduction at checkout with verification.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 8. 🏷️ Price Control & Price History Audit
+- Centralized price regulation separate from standard product editing.
+- Batch price update utilities.
+- Historical price ledger recording previous prices, updated prices, timestamps, and authorized users.
 
-### Premium Partners
+### 9. 📑 Financial & Performance Reports
+- **Sales Analysis Reports:** Sales broken down by product, category, date range, and payment types.
+- **Profitability Reports:** Accurate net profit calculations based on dynamic cost price and selling price.
+- **Adjustment & Transaction Reports:** Full accountability reports for store audits.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### 10. 🏢 Multi-Branch & Organizational Structure
+- Branch, Department, Store, and Employee management.
+- Banking details and payment account management.
+- System parameter configuration (`InvPara`) for invoice styling, company headers, and fiscal settings.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🛠️ Technology Stack
 
-## Code of Conduct
+- **Framework:** Laravel 10.x
+- **Language:** PHP 8.2+
+- **Database:** MySQL / MariaDB (Supports SQLite for testing)
+- **Authentication:** Laravel Sanctum
+- **Architecture:** RESTful API Design Pattern with Resource Controllers & Eloquent ORM
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+---
 
-## Security Vulnerabilities
+## 📋 Prerequisites
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Before running the project locally, ensure you have:
+- PHP >= 8.2
+- Composer
+- MySQL >= 8.0 or MariaDB >= 10.4
+- Node.js & npm (optional, if building assets)
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## ⚙️ Installation & Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone -b sandun_br01 https://github.com/sandun007/sap-backend.git
+   cd sap-backend
+   ```
+
+2. **Install PHP dependencies:**
+   ```bash
+   composer install
+   ```
+
+3. **Configure Environment:**
+   ```bash
+   cp .env.example .env
+   ```
+   Update `.env` with your database credentials:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=sap_db
+   DB_USERNAME=root
+   DB_PASSWORD=your_password
+   ```
+
+4. **Generate Application Key:**
+   ```bash
+   php artisan key:generate
+   ```
+
+5. **Run Migrations & Seeders:**
+   ```bash
+   php artisan migrate --seed
+   ```
+   > The seeder initializes default administrator accounts, master categories, demo suppliers, branches, and sample products.
+
+6. **Start the Development Server:**
+   ```bash
+   php artisan serve
+   ```
+   The API will be available at `http://127.0.0.1:8000`.
+
+---
+
+## 📡 API Endpoints Overview
+
+| Module | Method | Endpoint | Description |
+|---|---|---|---|
+| **Auth** | `POST` | `/api/login` | Authenticate and obtain Sanctum bearer token |
+| **Auth** | `GET` | `/api/me` | Retrieve authenticated user profile |
+| **Dashboard** | `GET` | `/api/dashboard/stats` | Business KPI counters and overview |
+| **Products** | `GET` | `/api/products` | Paginated product list |
+| **Inventory** | `GET` | `/api/stocks/history` | Bin Card inventory movement history |
+| **Inventory** | `POST` | `/api/stocks/adjust-batches` | Batch-level inventory adjustments |
+| **Invoicing** | `POST` | `/api/invoices` | Create invoice & deduct stock |
+| **Returns** | `POST` | `/api/invoices/return` | Process return and issue credit note |
+| **Purchases** | `GET` | `/api/purchases` | List Goods Received Notes (GRN) |
+| **Price Control** | `POST` | `/api/price-control/batch-update` | Bulk adjust product price thresholds |
+| **Reports** | `GET` | `/api/reports/sales` | Item-wise and date-wise sales reports |
+| **Reports** | `GET` | `/api/reports/profit` | Comprehensive profitability report |
+
+---
+
+## 🔒 Security & Best Practices
+
+- Standard CORS policies configured for decoupled frontend clients (React / Vue).
+- Foreign key constraints with transactional rollback protection for high-value financial actions.
+- Password hashing utilizing Bcrypt.
+
+---
+
+## 📄 License
+
+This software is distributed under the [MIT License](LICENSE).
