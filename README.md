@@ -59,6 +59,34 @@ A robust, enterprise-grade RESTful API backend built with **Laravel 10** and **P
 
 ---
 
+## 🔗 Frontend Client Integration
+
+This backend is designed to pair seamlessly with the frontend client:
+👉 **Frontend Repository:** [https://github.com/sandun007/sap-frontend](https://github.com/sandun007/sap-frontend)
+
+### Running Backend & Frontend Together:
+
+1. **Start this Backend Server:**
+   ```bash
+   php artisan serve --port=8000
+   ```
+   *Runs at `http://127.0.0.1:8000` (or `http://localhost:8000`).*
+
+2. **Configure the Frontend (`sap-frontend`):**
+   In your `sap-frontend` project directory, configure your environment file to point to the backend API:
+   ```env
+   VITE_API_BASE_URL=http://localhost:8000/api
+   ```
+
+3. **CORS Support:**
+   The backend allows cross-origin requests from frontend dev servers running on `http://localhost:5173`, `http://localhost:3000`, and `http://localhost:5174`.
+
+4. **Default Seeded Admin Credentials:**
+   - **Email:** `admin@example.com`
+   - **Password:** `password`
+
+---
+
 ## 🛠️ Technology Stack
 
 - **Framework:** Laravel 10.x
